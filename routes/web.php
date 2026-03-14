@@ -1,0 +1,48 @@
+<?php
+
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\POSController;
+use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ReportController;
+use App\Http\Controllers\SettingsController;
+use Illuminate\Support\Facades\Route;
+
+Route::get('/', function () {
+    return redirect()->route('login');
+});
+
+Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+Route::post('/login', [AuthController::class, 'login']);
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+Route::middleware('auth')->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Categories
+    Route::resource('categories', CategoryController::class)->except(['show']);
+
+    // Products
+    Route::resource('products', ProductController::class);
+    Route::post('/products/{product}/adjust-stock', [ProductController::class, 'adjustStock'])->name('products.adjust-stock');
+
+    // POS
+    Route::get('/pos', [POSController::class, 'index'])->name('pos.index');
+    Route::get('/pos/search', [POSController::class, 'searchProducts'])->name('pos.search');
+    Route::get('/pos/product/{product}', [POSController::class, 'getProduct'])->name('pos.product');
+    Route::post('/pos/checkout', [POSController::class, 'checkout'])->name('pos.checkout');
+    Route::get('/pos/receipt/{sale}', [POSController::class, 'receipt'])->name('pos.receipt');
+    Route::get('/pos/history', [POSController::class, 'salesHistory'])->name('pos.history');
+    Route::post('/pos/{sale}/cancel', [POSController::class, 'cancelSale'])->name('pos.cancel');
+
+    // Reports
+    Route::get('/reports/daily', [ReportController::class, 'daily'])->name('reports.daily');
+    Route::get('/reports/monthly', [ReportController::class, 'monthly'])->name('reports.monthly');
+    Route::get('/reports/inventory', [ReportController::class, 'inventory'])->name('reports.inventory');
+    Route::get('/reports/profit', [ReportController::class, 'profit'])->name('reports.profit');
+
+    // Settings
+    Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
+    Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
+});
