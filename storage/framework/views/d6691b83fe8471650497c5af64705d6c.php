@@ -11,7 +11,7 @@
                 <i class="bi bi-currency-dollar"></i>
             </div>
             <div class="stat-info">
-                <h3>₹<?php echo e(number_format($todaySales, 2)); ?></h3>
+                <h3><?php echo e($currency); ?><?php echo e(number_format($todaySales, 2)); ?></h3>
                 <p>Today's Sales</p>
             </div>
         </div>
@@ -22,7 +22,7 @@
                 <i class="bi bi-graph-up"></i>
             </div>
             <div class="stat-info">
-                <h3>₹<?php echo e(number_format($monthSales, 2)); ?></h3>
+                <h3><?php echo e($currency); ?><?php echo e(number_format($monthSales, 2)); ?></h3>
                 <p>Monthly Sales</p>
             </div>
         </div>
@@ -109,7 +109,7 @@
                                         <a href="<?php echo e(route('pos.receipt', $sale)); ?>"><?php echo e($sale->invoice_number); ?></a>
                                     </td>
                                     <td><?php echo e($sale->customer_name ?: 'Walk-in Customer'); ?></td>
-                                    <td class="fw-semibold">₹<?php echo e(number_format($sale->total, 2)); ?></td>
+                                    <td class="fw-semibold"><?php echo e($currency); ?><?php echo e(number_format($sale->total, 2)); ?></td>
                                     <td>
                                         <span class="badge bg-<?php echo e($sale->payment_method === 'cash' ? 'success' : ($sale->payment_method === 'card' ? 'primary' : 'info')); ?>">
                                             <?php echo e(ucfirst($sale->payment_method)); ?>
@@ -165,6 +165,7 @@
 <script>
     const salesData = <?php echo json_encode($salesChart, 15, 512) ?>;
     const ctx = document.getElementById('salesChart').getContext('2d');
+    const cs = window.currencySymbol;
     
     new Chart(ctx, {
         type: 'line',
@@ -189,7 +190,7 @@
                 y: {
                     beginAtZero: true,
                     ticks: {
-                        callback: value => '₹' + value.toLocaleString()
+                        callback: value => cs + value.toLocaleString()
                     }
                 }
             }

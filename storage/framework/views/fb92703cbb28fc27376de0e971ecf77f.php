@@ -153,6 +153,39 @@
     <div class="col-lg-6">
         <div class="card">
             <div class="card-header">
+                <i class="bi bi-building me-2"></i>Sales by Company
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Company</th>
+                                <th class="text-end">Qty</th>
+                                <th class="text-end">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php $__empty_1 = true; $__currentLoopData = $companyDailySales; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $row): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                                <tr>
+                                    <td><?php echo e($row->company ?: 'Unknown'); ?></td>
+                                    <td class="text-end"><?php echo e($row->total_qty); ?></td>
+                                    <td class="text-end fw-semibold"><?php echo e($currency); ?><?php echo e(number_format($row->total_amount, 2)); ?></td>
+                                </tr>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
+                                <tr>
+                                    <td colspan="3" class="text-center text-muted py-3">No sales data</td>
+                                </tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
                 <i class="bi bi-list-ul me-2"></i>All Transactions
             </div>
             <div class="card-body p-0" style="max-height: 400px; overflow-y: auto;">

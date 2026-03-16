@@ -7,6 +7,7 @@ use App\Http\Controllers\POSController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -46,4 +47,10 @@ Route::middleware('auth')->group(function () {
     // Settings
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
     Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
+
+    // User management (admin only)
+    Route::middleware('admin')->group(function () {
+        Route::resource('users', UserController::class)->except(['show']);
+        Route::post('/users/{user}/toggle-active', [UserController::class, 'toggleActive'])->name('users.toggle-active');
+    });
 });

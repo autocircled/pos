@@ -266,6 +266,11 @@
             </a>
             
             <div class="nav-section">System</div>
+            <?php if(auth()->user() && auth()->user()->isAdmin()): ?>
+                <a class="nav-link <?php echo e(request()->routeIs('users.*') ? 'active' : ''); ?>" href="<?php echo e(route('users.index')); ?>">
+                    <i class="bi bi-people"></i> Users
+                </a>
+            <?php endif; ?>
             <a class="nav-link <?php echo e(request()->routeIs('settings.*') ? 'active' : ''); ?>" href="<?php echo e(route('settings.index')); ?>">
                 <i class="bi bi-gear"></i> Settings
             </a>
@@ -290,12 +295,19 @@
                     <i class="bi bi-chevron-down"></i>
                 </div>
                 <ul class="dropdown-menu dropdown-menu-end">
-                    <li>
-                        <a class="dropdown-item" href="<?php echo e(route('settings.index')); ?>">
-                            <i class="bi bi-gear me-2"></i> Settings
-                        </a>
-                    </li>
-                    <li><hr class="dropdown-divider"></li>
+                    <?php if(auth()->user() && auth()->user()->isAdmin()): ?>
+                        <li>
+                            <a class="dropdown-item" href="<?php echo e(route('users.index')); ?>">
+                                <i class="bi bi-people me-2"></i> Users
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="<?php echo e(route('settings.index')); ?>">
+                                <i class="bi bi-gear me-2"></i> Settings
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                    <?php endif; ?>
                     <li>
                         <form action="<?php echo e(route('logout')); ?>" method="POST">
                             <?php echo csrf_field(); ?>

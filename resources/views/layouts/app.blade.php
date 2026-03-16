@@ -266,6 +266,11 @@
             </a>
             
             <div class="nav-section">System</div>
+            @if(auth()->user() && auth()->user()->isAdmin())
+                <a class="nav-link {{ request()->routeIs('users.*') ? 'active' : '' }}" href="{{ route('users.index') }}">
+                    <i class="bi bi-people"></i> Users
+                </a>
+            @endif
             <a class="nav-link {{ request()->routeIs('settings.*') ? 'active' : '' }}" href="{{ route('settings.index') }}">
                 <i class="bi bi-gear"></i> Settings
             </a>
@@ -290,12 +295,19 @@
                     <i class="bi bi-chevron-down"></i>
                 </div>
                 <ul class="dropdown-menu dropdown-menu-end">
-                    <li>
-                        <a class="dropdown-item" href="{{ route('settings.index') }}">
-                            <i class="bi bi-gear me-2"></i> Settings
-                        </a>
-                    </li>
-                    <li><hr class="dropdown-divider"></li>
+                    @if(auth()->user() && auth()->user()->isAdmin())
+                        <li>
+                            <a class="dropdown-item" href="{{ route('users.index') }}">
+                                <i class="bi bi-people me-2"></i> Users
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{{ route('settings.index') }}">
+                                <i class="bi bi-gear me-2"></i> Settings
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                    @endif
                     <li>
                         <form action="{{ route('logout') }}" method="POST">
                             @csrf
