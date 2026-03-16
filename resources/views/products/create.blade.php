@@ -24,7 +24,7 @@
                     @csrf
                     
                     <div class="row">
-                        <div class="col-md-8 mb-3">
+                        <div class="col-md-6 mb-3">
                             <label class="form-label">Product Name <span class="text-danger">*</span></label>
                             <input type="text" name="name" class="form-control @error('name') is-invalid @enderror" 
                                    value="{{ old('name', $d->name ?? '') }}" placeholder="e.g., Blue Ballpoint Pen" required>
@@ -32,7 +32,15 @@
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
-                        <div class="col-md-4 mb-3">
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Company</label>
+                            <input type="text" name="company" class="form-control @error('company') is-invalid @enderror"
+                                   value="{{ old('company', $d->company ?? '') }}" placeholder="e.g., Matador">
+                            @error('company')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="col-md-3 mb-3">
                             <label class="form-label">Category <span class="text-danger">*</span></label>
                             <select name="category_id" class="form-select @error('category_id') is-invalid @enderror" required>
                                 <option value="">Select Category</option>

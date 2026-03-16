@@ -45,7 +45,18 @@ class ReportController extends Controller
             ->orderBy('hour')
             ->get();
 
-        return view('reports.daily', compact('date', 'sales', 'summary', 'topProducts', 'hourlySales'));
+        $companyDailySales = SaleItem::select(
+                'products.company',
+                DB::raw('SUM(sale_items.quantity) as total_qty'),
+                DB::raw('SUM(sale_items.total) as total_amount')
+            )
+            ->join('products', 'sale_items.product_id', '=', 'products.id')
+            ->whereHas('sale', fn($q) => $q->whereDate('created_at', $date)->where('status', 'completed'))
+            ->groupBy('products.company')
+            ->orderByDesc('total_amount')
+            ->get();
+
+        return view('reports.daily', compact('date', 'sales', 'summary', 'topProducts', 'hourlySales', 'companyDailySales'));
     }
 
     public function monthly(Request $request)
@@ -102,9 +113,20 @@ class ReportController extends Controller
             ->groupBy('payment_method')
             ->get();
 
+        $companySales = SaleItem::select(
+                'products.company',
+                DB::raw('SUM(sale_items.quantity) as total_qty'),
+                DB::raw('SUM(sale_items.total) as total_amount')
+            )
+            ->join('products', 'sale_items.product_id', '=', 'products.id')
+            ->whereHas('sale', fn($q) => $q->whereBetween('created_at', [$startDate, $endDate])->where('status', 'completed'))
+            ->groupBy('products.company')
+            ->orderByDesc('total_amount')
+            ->get();
+
         return view('reports.monthly', compact(
             'month', 'year', 'summary', 'dailySales', 'topProducts', 
-            'categoryWiseSales', 'paymentMethodSales', 'startDate', 'endDate'
+            'categoryWiseSales', 'paymentMethodSales', 'startDate', 'endDate', 'companySales'
         ));
     }
 
@@ -118,7 +140,9 @@ class ReportController extends Controller
             'total_products' => $products->count(),
             'total_stock_value' => $products->sum(fn($p) => $p->quantity * $p->cost_price),
             'total_retail_value' => $products->sum(fn($p) => $p->quantity * $p->selling_price),
-            'low_stock_count' => $products->filter(fn($p) => $p->isLowStock())->count(),
+            // Low stock: > 0 and <= alert quantity
+            'low_stock_count' => $products->filter(fn($p) => $p->quantity > 0 && $p->isLowStock())->count(),
+            // Out of stock: == 0
             'out_of_stock_count' => $products->filter(fn($p) => $p->quantity === 0)->count(),
         ];
 
@@ -126,7 +150,17 @@ class ReportController extends Controller
             ->withCount('products')
             ->get();
 
-        return view('reports.inventory', compact('products', 'summary', 'categoryStock'));
+        $companyStock = Product::select(
+                'company',
+                DB::raw('COUNT(*) as products_count'),
+                DB::raw('SUM(quantity) as total_quantity'),
+                DB::raw('SUM(quantity * cost_price) as stock_value')
+            )
+            ->groupBy('company')
+            ->orderBy('company')
+            ->get();
+
+        return view('reports.inventory', compact('products', 'summary', 'categoryStock', 'companyStock'));
     }
 
     public function profit(Request $request)
@@ -166,9 +200,20 @@ class ReportController extends Controller
             ->orderByDesc('profit')
             ->get();
 
+        $companyProfit = SaleItem::select(
+                'products.company',
+                DB::raw('SUM(sale_items.total) as revenue'),
+                DB::raw('SUM((sale_items.unit_price - sale_items.cost_price) * sale_items.quantity - sale_items.discount) as profit')
+            )
+            ->join('products', 'sale_items.product_id', '=', 'products.id')
+            ->whereHas('sale', fn($q) => $q->whereBetween('created_at', [$startDate, $endDate])->where('status', 'completed'))
+            ->groupBy('products.company')
+            ->orderByDesc('profit')
+            ->get();
+
         return view('reports.profit', compact(
             'startDate', 'endDate', 'totalRevenue', 'totalCost', 
-            'totalProfit', 'profitMargin', 'dailyProfit', 'productProfit'
+            'totalProfit', 'profitMargin', 'dailyProfit', 'productProfit', 'companyProfit'
         ));
     }
 }

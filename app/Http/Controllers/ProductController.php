@@ -19,8 +19,14 @@ class ProductController extends Controller
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                     ->orWhere('sku', 'like', "%{$search}%")
-                    ->orWhere('barcode', 'like', "%{$search}%");
+                    ->orWhere('barcode', 'like', "%{$search}%")
+                    ->orWhere('company', 'like', "%{$search}%");
             });
+        }
+
+        if ($request->filled('company')) {
+            $company = $request->company;
+            $query->where('company', 'like', "%{$company}%");
         }
 
         if ($request->filled('category')) {
@@ -29,8 +35,11 @@ class ProductController extends Controller
 
         if ($request->filled('stock')) {
             if ($request->stock === 'low') {
-                $query->whereColumn('quantity', '<=', 'alert_quantity');
+                // Low stock: greater than 0 but less than or equal to alert quantity
+                $query->where('quantity', '>', 0)
+                      ->whereColumn('quantity', '<=', 'alert_quantity');
             } elseif ($request->stock === 'out') {
+                // Out of stock: exactly 0
                 $query->where('quantity', 0);
             }
         }
@@ -67,6 +76,7 @@ class ProductController extends Controller
         $validated = $request->validate([
             'category_id' => 'required|exists:categories,id',
             'name' => 'required|string|max:255',
+            'company' => 'nullable|string|max:255',
             'sku' => 'required|string|unique:products',
             'barcode' => 'nullable|string|unique:products',
             'description' => 'nullable|string',
@@ -107,6 +117,7 @@ class ProductController extends Controller
         $validated = $request->validate([
             'category_id' => 'required|exists:categories,id',
             'name' => 'required|string|max:255',
+            'company' => 'nullable|string|max:255',
             'sku' => 'required|string|unique:products,sku,' . $product->id,
             'barcode' => 'nullable|string|unique:products,barcode,' . $product->id,
             'description' => 'nullable|string',

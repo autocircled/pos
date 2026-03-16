@@ -171,7 +171,7 @@
                     <div class="col">
                         <div class="input-group">
                             <span class="input-group-text"><i class="bi bi-search"></i></span>
-                            <input type="text" id="searchInput" class="form-control" placeholder="Search by name, SKU or barcode...">
+                            <input type="text" id="searchInput" class="form-control" placeholder="Search by name, SKU, barcode or company...">
                         </div>
                     </div>
                 </div>
@@ -199,6 +199,9 @@
                             </div>
                         @endif
                         <div class="name" title="{{ $product->name }}">{{ $product->name }}</div>
+                        @if($product->company)
+                            <div class="text-muted" style="font-size: 0.75rem;">{{ $product->company }}</div>
+                        @endif
                         <div class="price">{{ $currency }}{{ number_format($product->selling_price, 2) }}</div>
                         <div class="stock">{{ $product->quantity }} in stock</div>
                     </div>

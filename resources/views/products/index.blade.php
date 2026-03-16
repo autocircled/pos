@@ -23,6 +23,12 @@
                 </div>
             </div>
             <div class="col-md-3">
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-building"></i></span>
+                    <input type="text" name="company" class="form-control" placeholder="Company..." value="{{ request('company') }}">
+                </div>
+            </div>
+            <div class="col-md-2">
                 <select name="category" class="form-select">
                     <option value="">All Categories</option>
                     @foreach($categories as $category)
@@ -32,14 +38,14 @@
                     @endforeach
                 </select>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <select name="stock" class="form-select">
                     <option value="">All Stock Levels</option>
                     <option value="low" {{ request('stock') == 'low' ? 'selected' : '' }}>Low Stock</option>
                     <option value="out" {{ request('stock') == 'out' ? 'selected' : '' }}>Out of Stock</option>
                 </select>
             </div>
-            <div class="col-md-2">
+            <div class="col-md-1">
                 <button type="submit" class="btn btn-primary w-100">Filter</button>
             </div>
         </form>
@@ -78,6 +84,9 @@
                                     @endif
                                     <div>
                                         <div class="fw-semibold">{{ $product->name }}</div>
+                                        @if($product->company)
+                                            <small class="text-muted d-block">{{ $product->company }}</small>
+                                        @endif
                                         @if($product->barcode)
                                             <small class="text-muted">{{ $product->barcode }}</small>
                                         @endif

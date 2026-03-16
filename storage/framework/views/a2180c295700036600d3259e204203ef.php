@@ -23,6 +23,12 @@
                 </div>
             </div>
             <div class="col-md-3">
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-building"></i></span>
+                    <input type="text" name="company" class="form-control" placeholder="Company..." value="<?php echo e(request('company')); ?>">
+                </div>
+            </div>
+            <div class="col-md-2">
                 <select name="category" class="form-select">
                     <option value="">All Categories</option>
                     <?php $__currentLoopData = $categories; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $category): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
@@ -33,14 +39,14 @@
                     <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </select>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <select name="stock" class="form-select">
                     <option value="">All Stock Levels</option>
                     <option value="low" <?php echo e(request('stock') == 'low' ? 'selected' : ''); ?>>Low Stock</option>
                     <option value="out" <?php echo e(request('stock') == 'out' ? 'selected' : ''); ?>>Out of Stock</option>
                 </select>
             </div>
-            <div class="col-md-2">
+            <div class="col-md-1">
                 <button type="submit" class="btn btn-primary w-100">Filter</button>
             </div>
         </form>
@@ -79,6 +85,9 @@
                                     <?php endif; ?>
                                     <div>
                                         <div class="fw-semibold"><?php echo e($product->name); ?></div>
+                                        <?php if($product->company): ?>
+                                            <small class="text-muted d-block"><?php echo e($product->company); ?></small>
+                                        <?php endif; ?>
                                         <?php if($product->barcode): ?>
                                             <small class="text-muted"><?php echo e($product->barcode); ?></small>
                                         <?php endif; ?>

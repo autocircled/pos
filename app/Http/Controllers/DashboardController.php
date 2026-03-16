@@ -23,7 +23,10 @@ class DashboardController extends Controller
             ->sum('total');
 
         $totalProducts = Product::count();
-        $lowStockProducts = Product::whereColumn('quantity', '<=', 'alert_quantity')->count();
+        // Low stock: greater than 0 but less than or equal to alert quantity
+        $lowStockProducts = Product::where('quantity', '>', 0)
+            ->whereColumn('quantity', '<=', 'alert_quantity')
+            ->count();
 
         $todayTransactions = Sale::whereDate('created_at', today())
             ->where('status', 'completed')
@@ -36,6 +39,7 @@ class DashboardController extends Controller
             ->get();
 
         $lowStockItems = Product::with('category')
+            ->where('quantity', '>', 0)
             ->whereColumn('quantity', '<=', 'alert_quantity')
             ->orderBy('quantity')
             ->take(5)

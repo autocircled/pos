@@ -171,7 +171,7 @@
                     <div class="col">
                         <div class="input-group">
                             <span class="input-group-text"><i class="bi bi-search"></i></span>
-                            <input type="text" id="searchInput" class="form-control" placeholder="Search by name, SKU or barcode...">
+                            <input type="text" id="searchInput" class="form-control" placeholder="Search by name, SKU, barcode or company...">
                         </div>
                     </div>
                 </div>
@@ -199,6 +199,9 @@
                             </div>
                         <?php endif; ?>
                         <div class="name" title="<?php echo e($product->name); ?>"><?php echo e($product->name); ?></div>
+                        <?php if($product->company): ?>
+                            <div class="text-muted" style="font-size: 0.75rem;"><?php echo e($product->company); ?></div>
+                        <?php endif; ?>
                         <div class="price"><?php echo e($currency); ?><?php echo e(number_format($product->selling_price, 2)); ?></div>
                         <div class="stock"><?php echo e($product->quantity); ?> in stock</div>
                     </div>

@@ -153,6 +153,39 @@
     <div class="col-lg-6">
         <div class="card">
             <div class="card-header">
+                <i class="bi bi-building me-2"></i>Sales by Company
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Company</th>
+                                <th class="text-end">Qty</th>
+                                <th class="text-end">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($companyDailySales as $row)
+                                <tr>
+                                    <td>{{ $row->company ?: 'Unknown' }}</td>
+                                    <td class="text-end">{{ $row->total_qty }}</td>
+                                    <td class="text-end fw-semibold">{{ $currency }}{{ number_format($row->total_amount, 2) }}</td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="3" class="text-center text-muted py-3">No sales data</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
                 <i class="bi bi-list-ul me-2"></i>All Transactions
             </div>
             <div class="card-body p-0" style="max-height: 400px; overflow-y: auto;">
