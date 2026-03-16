@@ -69,7 +69,7 @@
                             <td>
                                 <div class="d-flex align-items-center gap-2">
                                     <?php if($product->image): ?>
-                                        <img src="<?php echo e(asset('storage/' . $product->image)); ?>" alt="<?php echo e($product->name); ?>" 
+                                        <img src="<?php echo e($product->image_url); ?>" alt="<?php echo e($product->name); ?>" 
                                              class="rounded" style="width: 40px; height: 40px; object-fit: cover;">
                                     <?php else: ?>
                                         <div class="bg-light rounded d-flex align-items-center justify-content-center" 
@@ -112,6 +112,9 @@
                                     </a>
                                     <a href="<?php echo e(route('products.edit', $product)); ?>" class="btn btn-outline-primary" title="Edit">
                                         <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a href="<?php echo e(route('products.duplicate', $product)); ?>" class="btn btn-outline-secondary" title="Duplicate">
+                                        <i class="bi bi-copy"></i>
                                     </a>
                                     <form action="<?php echo e(route('products.destroy', $product)); ?>" method="POST" class="d-inline" 
                                           onsubmit="return confirm('Are you sure you want to delete this product?')">

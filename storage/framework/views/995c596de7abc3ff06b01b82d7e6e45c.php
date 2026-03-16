@@ -94,6 +94,18 @@
         align-items: center;
         gap: 0.25rem;
     }
+    .qty-control .qty-btn {
+        width: 28px;
+        height: 28px;
+        border: none;
+        background: #f1f5f9;
+        border-radius: 0.25rem;
+        font-weight: 600;
+        cursor: pointer;
+    }
+    .qty-control .qty-btn:hover {
+        background: #e2e8f0;
+    }
     .qty-control button {
         width: 28px;
         height: 28px;
@@ -101,6 +113,7 @@
         background: #f1f5f9;
         border-radius: 0.25rem;
         font-weight: 600;
+        cursor: pointer;
     }
     .qty-control input {
         width: 40px;
@@ -178,7 +191,7 @@
                          data-product="<?php echo e(json_encode($product)); ?>"
                          data-category="<?php echo e($product->category_id); ?>">
                         <?php if($product->image): ?>
-                            <img src="<?php echo e(asset('storage/' . $product->image)); ?>" alt="<?php echo e($product->name); ?>">
+                            <img src="<?php echo e($product->image_url); ?>" alt="<?php echo e($product->name); ?>">
                         <?php else: ?>
                             <div class="bg-light rounded d-flex align-items-center justify-content-center mx-auto" 
                                  style="width: 60px; height: 60px;">
@@ -186,7 +199,7 @@
                             </div>
                         <?php endif; ?>
                         <div class="name" title="<?php echo e($product->name); ?>"><?php echo e($product->name); ?></div>
-                        <div class="price">₹<?php echo e(number_format($product->selling_price, 2)); ?></div>
+                        <div class="price"><?php echo e($currency); ?><?php echo e(number_format($product->selling_price, 2)); ?></div>
                         <div class="stock"><?php echo e($product->quantity); ?> in stock</div>
                     </div>
                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
@@ -212,25 +225,25 @@
             <div class="cart-summary">
                 <div class="summary-row">
                     <span>Subtotal</span>
-                    <span id="subtotal">₹0.00</span>
+                    <span id="subtotal"><?php echo e($currency); ?>0.00</span>
                 </div>
                 <div class="summary-row">
                     <span>Discount</span>
                     <div class="input-group input-group-sm" style="width: 120px;">
-                        <span class="input-group-text">₹</span>
+                        <span class="input-group-text"><?php echo e($currency); ?></span>
                         <input type="number" id="discount" class="form-control" value="0" min="0" step="0.01">
                     </div>
                 </div>
                 <div class="summary-row">
                     <span>Tax</span>
                     <div class="input-group input-group-sm" style="width: 120px;">
-                        <span class="input-group-text">₹</span>
+                        <span class="input-group-text"><?php echo e($currency); ?></span>
                         <input type="number" id="tax" class="form-control" value="0" min="0" step="0.01">
                     </div>
                 </div>
                 <div class="summary-row total">
                     <span>Total</span>
-                    <span id="total">₹0.00</span>
+                    <span id="total"><?php echo e($currency); ?>0.00</span>
                 </div>
             </div>
             
@@ -262,15 +275,15 @@
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Payment Method</label>
-                    <div class="btn-group w-100" role="group">
-                        <input type="radio" class="btn-check" name="paymentMethod" id="paymentCash" value="cash" checked>
-                        <label class="btn btn-outline-primary" for="paymentCash"><i class="bi bi-cash me-1"></i>Cash</label>
-                        
-                        <input type="radio" class="btn-check" name="paymentMethod" id="paymentCard" value="card">
-                        <label class="btn btn-outline-primary" for="paymentCard"><i class="bi bi-credit-card me-1"></i>Card</label>
-                        
-                        <input type="radio" class="btn-check" name="paymentMethod" id="paymentUPI" value="upi">
-                        <label class="btn btn-outline-primary" for="paymentUPI"><i class="bi bi-phone me-1"></i>UPI</label>
+                    <div class="btn-group w-100 flex-wrap" role="group">
+                        <?php $__currentLoopData = $paymentMethods; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $idx => $method): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <input type="radio" class="btn-check" name="paymentMethod" id="payment<?php echo e($method['code']); ?>" 
+                                   value="<?php echo e($method['code']); ?>" <?php echo e($idx === 0 ? 'checked' : ''); ?>>
+                            <label class="btn btn-outline-primary" for="payment<?php echo e($method['code']); ?>">
+                                <?php echo e($method['name']); ?>
+
+                            </label>
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </div>
                 </div>
                 <div class="row">
@@ -285,7 +298,7 @@
                 </div>
                 <div class="mt-3 p-3 bg-light rounded text-center">
                     <small class="text-muted">Change</small>
-                    <h3 id="changeAmount" class="mb-0 text-success">₹0.00</h3>
+                    <h3 id="changeAmount" class="mb-0 text-success"><?php echo e($currency); ?>0.00</h3>
                 </div>
                 <div class="mb-3 mt-3">
                     <label class="form-label">Notes</label>
@@ -306,9 +319,12 @@
 <?php $__env->startPush('scripts'); ?>
 <script>
 let cart = [];
+let emptyCartEl = null;
 const products = <?php echo json_encode($products, 15, 512) ?>;
+const cs = (typeof window.currencySymbol !== 'undefined') ? window.currencySymbol : '৳';
 
 document.addEventListener('DOMContentLoaded', function() {
+    emptyCartEl = document.getElementById('emptyCart');
     // Category filter
     document.querySelectorAll('.category-pill').forEach(pill => {
         pill.addEventListener('click', function() {
@@ -330,7 +346,10 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // Clear cart
-    document.getElementById('clearCart').addEventListener('click', clearCart);
+    document.getElementById('clearCart').addEventListener('click', function(e) {
+        e.preventDefault();
+        clearCart();
+    });
     
     // Discount/Tax change
     document.getElementById('discount').addEventListener('input', updateTotals);
@@ -344,6 +363,38 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Complete sale
     document.getElementById('completeSale').addEventListener('click', completeSale);
+    
+    // Event delegation for cart items (quantity buttons, remove, qty input)
+    document.getElementById('cartItems').addEventListener('click', function(e) {
+        const btn = e.target.closest('button[data-cart-index]');
+        if (!btn) return;
+        e.preventDefault();
+        const index = parseInt(btn.getAttribute('data-cart-index'), 10);
+        const action = btn.getAttribute('data-cart-action');
+        if (action === 'decrease') {
+            updateQuantity(index, -1);
+        } else if (action === 'increase') {
+            updateQuantity(index, 1);
+        } else if (action === 'remove') {
+            removeFromCart(index);
+        }
+    });
+    
+    document.getElementById('cartItems').addEventListener('input', function(e) {
+        const input = e.target.closest('input[data-cart-qty]');
+        if (!input) return;
+        const index = parseInt(input.getAttribute('data-cart-index'), 10);
+        const val = parseInt(input.value, 10);
+        if (!isNaN(val)) setQuantity(index, val);
+    });
+    
+    document.getElementById('cartItems').addEventListener('change', function(e) {
+        const input = e.target.closest('input[data-cart-qty]');
+        if (!input) return;
+        const index = parseInt(input.getAttribute('data-cart-index'), 10);
+        const val = parseInt(input.value, 10);
+        if (!isNaN(val)) setQuantity(index, val);
+    });
 });
 
 function filterProducts() {
@@ -387,33 +438,37 @@ function addToCart(product) {
 
 function renderCart() {
     const container = document.getElementById('cartItems');
-    const emptyCart = document.getElementById('emptyCart');
     
     if (cart.length === 0) {
-        emptyCart.style.display = 'block';
         container.innerHTML = '';
-        container.appendChild(emptyCart);
+        if (emptyCartEl) {
+            emptyCartEl.style.display = 'block';
+            emptyCartEl.classList.remove('d-none');
+            container.appendChild(emptyCartEl);
+        }
         document.getElementById('checkoutBtn').disabled = true;
         updateTotals();
         return;
     }
     
-    emptyCart.style.display = 'none';
+    if (emptyCartEl && emptyCartEl.parentNode) {
+        emptyCartEl.remove();
+        emptyCartEl.style.display = 'none';
+    }
     document.getElementById('checkoutBtn').disabled = false;
     
     container.innerHTML = cart.map((item, index) => `
-        <div class="cart-item">
+        <div class="cart-item" data-cart-item="${index}">
             <div class="info">
-                <div class="name">${item.name}</div>
-                <div class="price">₹${item.price.toFixed(2)} × ${item.quantity} = ₹${(item.price * item.quantity).toFixed(2)}</div>
+                <div class="name">${escapeHtml(item.name)}</div>
+                <div class="price cart-item-total">${cs}${item.price.toFixed(2)} × ${item.quantity} = ${cs}${(item.price * item.quantity).toFixed(2)}</div>
             </div>
             <div class="qty-control">
-                <button onclick="updateQuantity(${index}, -1)">-</button>
-                <input type="number" value="${item.quantity}" min="1" max="${item.max_qty}" 
-                       onchange="setQuantity(${index}, this.value)">
-                <button onclick="updateQuantity(${index}, 1)">+</button>
+                <button type="button" class="qty-btn" data-cart-index="${index}" data-cart-action="decrease">−</button>
+                <input type="number" class="qty-input" data-cart-index="${index}" data-cart-qty value="${item.quantity}" min="1" max="${item.max_qty}">
+                <button type="button" class="qty-btn" data-cart-index="${index}" data-cart-action="increase">+</button>
             </div>
-            <button class="btn btn-sm btn-link text-danger" onclick="removeFromCart(${index})">
+            <button type="button" class="btn btn-sm btn-link text-danger" data-cart-index="${index}" data-cart-action="remove" title="Remove">
                 <i class="bi bi-trash"></i>
             </button>
         </div>
@@ -422,7 +477,14 @@ function renderCart() {
     updateTotals();
 }
 
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
 function updateQuantity(index, delta) {
+    if (index < 0 || index >= cart.length) return;
     const item = cart[index];
     const newQty = item.quantity + delta;
     
@@ -433,16 +495,18 @@ function updateQuantity(index, delta) {
 }
 
 function setQuantity(index, value) {
+    if (index < 0 || index >= cart.length) return;
     const item = cart[index];
-    const qty = parseInt(value);
+    const qty = parseInt(value, 10);
     
-    if (qty >= 1 && qty <= item.max_qty) {
+    if (!isNaN(qty) && qty >= 1 && qty <= item.max_qty) {
         item.quantity = qty;
         renderCart();
     }
 }
 
 function removeFromCart(index) {
+    if (index < 0 || index >= cart.length) return;
     cart.splice(index, 1);
     renderCart();
 }
@@ -456,17 +520,27 @@ function clearCart() {
 
 function updateTotals() {
     const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    const discount = parseFloat(document.getElementById('discount').value) || 0;
-    const tax = parseFloat(document.getElementById('tax').value) || 0;
+    const discountEl = document.getElementById('discount');
+    const taxEl = document.getElementById('tax');
+    const discount = discountEl ? (parseFloat(discountEl.value) || 0) : 0;
+    const tax = taxEl ? (parseFloat(taxEl.value) || 0) : 0;
     const total = subtotal - discount + tax;
     
-    document.getElementById('subtotal').textContent = '₹' + subtotal.toFixed(2);
-    document.getElementById('total').textContent = '₹' + total.toFixed(2);
+    const subtotalEl = document.getElementById('subtotal');
+    const totalEl = document.getElementById('total');
+    if (subtotalEl) subtotalEl.textContent = cs + subtotal.toFixed(2);
+    if (totalEl) totalEl.textContent = cs + total.toFixed(2);
+}
+
+function parseTotalText(el) {
+    if (!el) return 0;
+    const text = (el.textContent || '').replace(/^[^\d.-]+/, '').trim();
+    return parseFloat(text) || 0;
 }
 
 function openCheckoutModal() {
-    const total = parseFloat(document.getElementById('total').textContent.replace('₹', ''));
-    document.getElementById('modalTotal').value = '₹' + total.toFixed(2);
+    const total = parseTotalText(document.getElementById('total'));
+    document.getElementById('modalTotal').value = cs + total.toFixed(2);
     document.getElementById('paidAmount').value = total.toFixed(2);
     calculateChange();
     
@@ -474,16 +548,16 @@ function openCheckoutModal() {
 }
 
 function calculateChange() {
-    const total = parseFloat(document.getElementById('total').textContent.replace('₹', ''));
+    const total = parseTotalText(document.getElementById('total'));
     const paid = parseFloat(document.getElementById('paidAmount').value) || 0;
     const change = paid - total;
     
-    document.getElementById('changeAmount').textContent = '₹' + Math.max(0, change).toFixed(2);
+    document.getElementById('changeAmount').textContent = cs + Math.max(0, change).toFixed(2);
     document.getElementById('changeAmount').className = change >= 0 ? 'mb-0 text-success' : 'mb-0 text-danger';
 }
 
 function completeSale() {
-    const total = parseFloat(document.getElementById('total').textContent.replace('₹', ''));
+    const total = parseTotalText(document.getElementById('total'));
     const paid = parseFloat(document.getElementById('paidAmount').value) || 0;
     
     if (paid < total) {

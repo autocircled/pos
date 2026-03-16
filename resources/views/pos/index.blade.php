@@ -94,6 +94,18 @@
         align-items: center;
         gap: 0.25rem;
     }
+    .qty-control .qty-btn {
+        width: 28px;
+        height: 28px;
+        border: none;
+        background: #f1f5f9;
+        border-radius: 0.25rem;
+        font-weight: 600;
+        cursor: pointer;
+    }
+    .qty-control .qty-btn:hover {
+        background: #e2e8f0;
+    }
     .qty-control button {
         width: 28px;
         height: 28px;
@@ -101,6 +113,7 @@
         background: #f1f5f9;
         border-radius: 0.25rem;
         font-weight: 600;
+        cursor: pointer;
     }
     .qty-control input {
         width: 40px;
@@ -178,7 +191,7 @@
                          data-product="{{ json_encode($product) }}"
                          data-category="{{ $product->category_id }}">
                         @if($product->image)
-                            <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}">
+                            <img src="{{ $product->image_url }}" alt="{{ $product->name }}">
                         @else
                             <div class="bg-light rounded d-flex align-items-center justify-content-center mx-auto" 
                                  style="width: 60px; height: 60px;">
@@ -262,15 +275,14 @@
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Payment Method</label>
-                    <div class="btn-group w-100" role="group">
-                        <input type="radio" class="btn-check" name="paymentMethod" id="paymentCash" value="cash" checked>
-                        <label class="btn btn-outline-primary" for="paymentCash"><i class="bi bi-cash me-1"></i>Cash</label>
-                        
-                        <input type="radio" class="btn-check" name="paymentMethod" id="paymentCard" value="card">
-                        <label class="btn btn-outline-primary" for="paymentCard"><i class="bi bi-credit-card me-1"></i>Card</label>
-                        
-                        <input type="radio" class="btn-check" name="paymentMethod" id="paymentUPI" value="upi">
-                        <label class="btn btn-outline-primary" for="paymentUPI"><i class="bi bi-phone me-1"></i>UPI</label>
+                    <div class="btn-group w-100 flex-wrap" role="group">
+                        @foreach($paymentMethods as $idx => $method)
+                            <input type="radio" class="btn-check" name="paymentMethod" id="payment{{ $method['code'] }}" 
+                                   value="{{ $method['code'] }}" {{ $idx === 0 ? 'checked' : '' }}>
+                            <label class="btn btn-outline-primary" for="payment{{ $method['code'] }}">
+                                {{ $method['name'] }}
+                            </label>
+                        @endforeach
                     </div>
                 </div>
                 <div class="row">
@@ -306,10 +318,12 @@
 @push('scripts')
 <script>
 let cart = [];
+let emptyCartEl = null;
 const products = @json($products);
-const cs = window.currencySymbol;
+const cs = (typeof window.currencySymbol !== 'undefined') ? window.currencySymbol : '৳';
 
 document.addEventListener('DOMContentLoaded', function() {
+    emptyCartEl = document.getElementById('emptyCart');
     // Category filter
     document.querySelectorAll('.category-pill').forEach(pill => {
         pill.addEventListener('click', function() {
@@ -331,7 +345,10 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // Clear cart
-    document.getElementById('clearCart').addEventListener('click', clearCart);
+    document.getElementById('clearCart').addEventListener('click', function(e) {
+        e.preventDefault();
+        clearCart();
+    });
     
     // Discount/Tax change
     document.getElementById('discount').addEventListener('input', updateTotals);
@@ -345,6 +362,38 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Complete sale
     document.getElementById('completeSale').addEventListener('click', completeSale);
+    
+    // Event delegation for cart items (quantity buttons, remove, qty input)
+    document.getElementById('cartItems').addEventListener('click', function(e) {
+        const btn = e.target.closest('button[data-cart-index]');
+        if (!btn) return;
+        e.preventDefault();
+        const index = parseInt(btn.getAttribute('data-cart-index'), 10);
+        const action = btn.getAttribute('data-cart-action');
+        if (action === 'decrease') {
+            updateQuantity(index, -1);
+        } else if (action === 'increase') {
+            updateQuantity(index, 1);
+        } else if (action === 'remove') {
+            removeFromCart(index);
+        }
+    });
+    
+    document.getElementById('cartItems').addEventListener('input', function(e) {
+        const input = e.target.closest('input[data-cart-qty]');
+        if (!input) return;
+        const index = parseInt(input.getAttribute('data-cart-index'), 10);
+        const val = parseInt(input.value, 10);
+        if (!isNaN(val)) setQuantity(index, val);
+    });
+    
+    document.getElementById('cartItems').addEventListener('change', function(e) {
+        const input = e.target.closest('input[data-cart-qty]');
+        if (!input) return;
+        const index = parseInt(input.getAttribute('data-cart-index'), 10);
+        const val = parseInt(input.value, 10);
+        if (!isNaN(val)) setQuantity(index, val);
+    });
 });
 
 function filterProducts() {
@@ -388,33 +437,37 @@ function addToCart(product) {
 
 function renderCart() {
     const container = document.getElementById('cartItems');
-    const emptyCart = document.getElementById('emptyCart');
     
     if (cart.length === 0) {
-        emptyCart.style.display = 'block';
         container.innerHTML = '';
-        container.appendChild(emptyCart);
+        if (emptyCartEl) {
+            emptyCartEl.style.display = 'block';
+            emptyCartEl.classList.remove('d-none');
+            container.appendChild(emptyCartEl);
+        }
         document.getElementById('checkoutBtn').disabled = true;
         updateTotals();
         return;
     }
     
-    emptyCart.style.display = 'none';
+    if (emptyCartEl && emptyCartEl.parentNode) {
+        emptyCartEl.remove();
+        emptyCartEl.style.display = 'none';
+    }
     document.getElementById('checkoutBtn').disabled = false;
     
     container.innerHTML = cart.map((item, index) => `
-        <div class="cart-item">
+        <div class="cart-item" data-cart-item="${index}">
             <div class="info">
-                <div class="name">${item.name}</div>
-                <div class="price">${cs}${item.price.toFixed(2)} × ${item.quantity} = ${cs}${(item.price * item.quantity).toFixed(2)}</div>
+                <div class="name">${escapeHtml(item.name)}</div>
+                <div class="price cart-item-total">${cs}${item.price.toFixed(2)} × ${item.quantity} = ${cs}${(item.price * item.quantity).toFixed(2)}</div>
             </div>
             <div class="qty-control">
-                <button onclick="updateQuantity(${index}, -1)">-</button>
-                <input type="number" value="${item.quantity}" min="1" max="${item.max_qty}" 
-                       onchange="setQuantity(${index}, this.value)">
-                <button onclick="updateQuantity(${index}, 1)">+</button>
+                <button type="button" class="qty-btn" data-cart-index="${index}" data-cart-action="decrease">−</button>
+                <input type="number" class="qty-input" data-cart-index="${index}" data-cart-qty value="${item.quantity}" min="1" max="${item.max_qty}">
+                <button type="button" class="qty-btn" data-cart-index="${index}" data-cart-action="increase">+</button>
             </div>
-            <button class="btn btn-sm btn-link text-danger" onclick="removeFromCart(${index})">
+            <button type="button" class="btn btn-sm btn-link text-danger" data-cart-index="${index}" data-cart-action="remove" title="Remove">
                 <i class="bi bi-trash"></i>
             </button>
         </div>
@@ -423,7 +476,14 @@ function renderCart() {
     updateTotals();
 }
 
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
 function updateQuantity(index, delta) {
+    if (index < 0 || index >= cart.length) return;
     const item = cart[index];
     const newQty = item.quantity + delta;
     
@@ -434,16 +494,18 @@ function updateQuantity(index, delta) {
 }
 
 function setQuantity(index, value) {
+    if (index < 0 || index >= cart.length) return;
     const item = cart[index];
-    const qty = parseInt(value);
+    const qty = parseInt(value, 10);
     
-    if (qty >= 1 && qty <= item.max_qty) {
+    if (!isNaN(qty) && qty >= 1 && qty <= item.max_qty) {
         item.quantity = qty;
         renderCart();
     }
 }
 
 function removeFromCart(index) {
+    if (index < 0 || index >= cart.length) return;
     cart.splice(index, 1);
     renderCart();
 }
@@ -457,16 +519,26 @@ function clearCart() {
 
 function updateTotals() {
     const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    const discount = parseFloat(document.getElementById('discount').value) || 0;
-    const tax = parseFloat(document.getElementById('tax').value) || 0;
+    const discountEl = document.getElementById('discount');
+    const taxEl = document.getElementById('tax');
+    const discount = discountEl ? (parseFloat(discountEl.value) || 0) : 0;
+    const tax = taxEl ? (parseFloat(taxEl.value) || 0) : 0;
     const total = subtotal - discount + tax;
     
-    document.getElementById('subtotal').textContent = cs + subtotal.toFixed(2);
-    document.getElementById('total').textContent = cs + total.toFixed(2);
+    const subtotalEl = document.getElementById('subtotal');
+    const totalEl = document.getElementById('total');
+    if (subtotalEl) subtotalEl.textContent = cs + subtotal.toFixed(2);
+    if (totalEl) totalEl.textContent = cs + total.toFixed(2);
+}
+
+function parseTotalText(el) {
+    if (!el) return 0;
+    const text = (el.textContent || '').replace(/^[^\d.-]+/, '').trim();
+    return parseFloat(text) || 0;
 }
 
 function openCheckoutModal() {
-    const total = parseFloat(document.getElementById('total').textContent.replace(cs, ''));
+    const total = parseTotalText(document.getElementById('total'));
     document.getElementById('modalTotal').value = cs + total.toFixed(2);
     document.getElementById('paidAmount').value = total.toFixed(2);
     calculateChange();
@@ -475,7 +547,7 @@ function openCheckoutModal() {
 }
 
 function calculateChange() {
-    const total = parseFloat(document.getElementById('total').textContent.replace(cs, ''));
+    const total = parseTotalText(document.getElementById('total'));
     const paid = parseFloat(document.getElementById('paidAmount').value) || 0;
     const change = paid - total;
     
@@ -484,7 +556,7 @@ function calculateChange() {
 }
 
 function completeSale() {
-    const total = parseFloat(document.getElementById('total').textContent.replace(cs, ''));
+    const total = parseTotalText(document.getElementById('total'));
     const paid = parseFloat(document.getElementById('paidAmount').value) || 0;
     
     if (paid < total) {

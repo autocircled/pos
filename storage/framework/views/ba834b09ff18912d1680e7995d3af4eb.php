@@ -28,26 +28,30 @@
         </div>
     </div>
     <div class="col-sm-6 col-xl-3">
-        <div class="stat-card">
-            <div class="stat-icon yellow">
-                <i class="bi bi-exclamation-triangle"></i>
+        <a href="<?php echo e(route('products.index', ['stock' => 'low'])); ?>" class="text-decoration-none text-reset">
+            <div class="stat-card">
+                <div class="stat-icon yellow">
+                    <i class="bi bi-exclamation-triangle"></i>
+                </div>
+                <div class="stat-info">
+                    <h3><?php echo e($summary['low_stock_count']); ?></h3>
+                    <p>Low Stock Items</p>
+                </div>
             </div>
-            <div class="stat-info">
-                <h3><?php echo e($summary['low_stock_count']); ?></h3>
-                <p>Low Stock Items</p>
-            </div>
-        </div>
+        </a>
     </div>
     <div class="col-sm-6 col-xl-3">
-        <div class="stat-card">
-            <div class="stat-icon red">
-                <i class="bi bi-x-circle"></i>
+        <a href="<?php echo e(route('products.index', ['stock' => 'out'])); ?>" class="text-decoration-none text-reset">
+            <div class="stat-card">
+                <div class="stat-icon red">
+                    <i class="bi bi-x-circle"></i>
+                </div>
+                <div class="stat-info">
+                    <h3><?php echo e($summary['out_of_stock_count']); ?></h3>
+                    <p>Out of Stock</p>
+                </div>
             </div>
-            <div class="stat-info">
-                <h3><?php echo e($summary['out_of_stock_count']); ?></h3>
-                <p>Out of Stock</p>
-            </div>
-        </div>
+        </a>
     </div>
 </div>
 

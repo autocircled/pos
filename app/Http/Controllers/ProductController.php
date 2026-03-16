@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
@@ -40,11 +41,25 @@ class ProductController extends Controller
         return view('products.index', compact('products', 'categories'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
         $categories = Category::all();
+        $duplicateProduct = null;
+
+        if ($request->has('duplicate')) {
+            $duplicateProduct = Product::find($request->duplicate);
+            if (!$duplicateProduct) {
+                return redirect()->route('products.create')->with('error', 'Product not found.');
+            }
+        }
+
         $sku = Product::generateSku();
-        return view('products.create', compact('categories', 'sku'));
+        return view('products.create', compact('categories', 'sku', 'duplicateProduct'));
+    }
+
+    public function duplicate(Product $product)
+    {
+        return redirect()->route('products.create', ['duplicate' => $product->id]);
     }
 
     public function store(Request $request)
@@ -66,7 +81,7 @@ class ProductController extends Controller
         $validated['is_active'] = $request->has('is_active');
 
         if ($request->hasFile('image')) {
-            $validated['image'] = $request->file('image')->store('products', 'public');
+            $validated['image'] = $this->storeProductImage($request->file('image'));
         }
 
         Product::create($validated);
@@ -107,9 +122,9 @@ class ProductController extends Controller
 
         if ($request->hasFile('image')) {
             if ($product->image) {
-                Storage::disk('public')->delete($product->image);
+                $this->deleteProductImage($product->image);
             }
-            $validated['image'] = $request->file('image')->store('products', 'public');
+            $validated['image'] = $this->storeProductImage($request->file('image'));
         }
 
         $product->update($validated);
@@ -121,7 +136,7 @@ class ProductController extends Controller
     public function destroy(Product $product)
     {
         if ($product->image) {
-            Storage::disk('public')->delete($product->image);
+            $this->deleteProductImage($product->image);
         }
 
         $product->delete();
@@ -147,5 +162,30 @@ class ProductController extends Controller
         }
 
         return back()->with('success', 'Stock adjusted successfully.');
+    }
+
+    /**
+     * Store uploaded image in public/uploads/products and return relative path.
+     */
+    private function storeProductImage($file): string
+    {
+        $dir = public_path('uploads/products');
+        if (!File::isDirectory($dir)) {
+            File::makeDirectory($dir, 0755, true);
+        }
+        $name = uniqid('product_', true) . '.' . $file->getClientOriginalExtension();
+        $file->move($dir, $name);
+        return 'uploads/products/' . $name;
+    }
+
+    /**
+     * Delete product image file from public uploads.
+     */
+    private function deleteProductImage(string $path): void
+    {
+        $fullPath = public_path($path);
+        if (File::exists($fullPath)) {
+            File::delete($fullPath);
+        }
     }
 }

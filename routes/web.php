@@ -24,6 +24,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('categories', CategoryController::class)->except(['show']);
 
     // Products
+    Route::get('/products/{product}/duplicate', [ProductController::class, 'duplicate'])->name('products.duplicate');
     Route::resource('products', ProductController::class);
     Route::post('/products/{product}/adjust-stock', [ProductController::class, 'adjustStock'])->name('products.adjust-stock');
 

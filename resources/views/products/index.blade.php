@@ -68,7 +68,7 @@
                             <td>
                                 <div class="d-flex align-items-center gap-2">
                                     @if($product->image)
-                                        <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" 
+                                        <img src="{{ $product->image_url }}" alt="{{ $product->name }}" 
                                              class="rounded" style="width: 40px; height: 40px; object-fit: cover;">
                                     @else
                                         <div class="bg-light rounded d-flex align-items-center justify-content-center" 
@@ -111,6 +111,9 @@
                                     </a>
                                     <a href="{{ route('products.edit', $product) }}" class="btn btn-outline-primary" title="Edit">
                                         <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a href="{{ route('products.duplicate', $product) }}" class="btn btn-outline-secondary" title="Duplicate">
+                                        <i class="bi bi-copy"></i>
                                     </a>
                                     <form action="{{ route('products.destroy', $product) }}" method="POST" class="d-inline" 
                                           onsubmit="return confirm('Are you sure you want to delete this product?')">

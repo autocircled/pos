@@ -32,6 +32,8 @@ class Product extends Model
         'is_active' => 'boolean',
     ];
 
+    protected $appends = ['image_url'];
+
     public function category()
     {
         return $this->belongsTo(Category::class);
@@ -57,5 +59,19 @@ class Product extends Model
         $prefix = 'STN';
         $number = str_pad(mt_rand(1, 99999), 5, '0', STR_PAD_LEFT);
         return $prefix . $number;
+    }
+
+    /**
+     * Full URL for the product image (works for both public/uploads and storage/app/public paths).
+     */
+    public function getImageUrlAttribute(): ?string
+    {
+        if (!$this->image) {
+            return null;
+        }
+        if (str_starts_with($this->image, 'uploads/')) {
+            return asset($this->image);
+        }
+        return asset('storage/' . $this->image);
     }
 }

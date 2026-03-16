@@ -10,6 +10,9 @@
             <div class="card-header d-flex justify-content-between align-items-center">
                 <span><i class="bi bi-box-seam me-2"></i>Product Information</span>
                 <div class="btn-group btn-group-sm">
+                    <a href="{{ route('products.duplicate', $product) }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-copy me-1"></i>Duplicate
+                    </a>
                     <a href="{{ route('products.edit', $product) }}" class="btn btn-outline-primary">
                         <i class="bi bi-pencil me-1"></i>Edit
                     </a>
@@ -19,7 +22,7 @@
                 <div class="row">
                     <div class="col-md-4 text-center mb-4">
                         @if($product->image)
-                            <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" 
+                            <img src="{{ $product->image_url }}" alt="{{ $product->name }}" 
                                  class="img-fluid rounded" style="max-height: 200px;">
                         @else
                             <div class="bg-light rounded d-flex align-items-center justify-content-center mx-auto" 

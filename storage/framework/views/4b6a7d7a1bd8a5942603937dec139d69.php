@@ -4,11 +4,21 @@
 <?php $__env->startSection('page-title', 'Create Product'); ?>
 
 <?php $__env->startSection('content'); ?>
+<?php
+    $fromDuplicate = isset($duplicateProduct);
+    $d = $duplicateProduct ?? null;
+?>
 <div class="row">
     <div class="col-lg-8">
+        <?php if($fromDuplicate): ?>
+            <div class="alert alert-info mb-3">
+                <i class="bi bi-copy me-2"></i>Creating new product from <strong><?php echo e($d->name); ?></strong>. SKU and stock are new; you can change any field.
+            </div>
+        <?php endif; ?>
         <div class="card">
             <div class="card-header">
-                <i class="bi bi-box-seam me-2"></i>New Product
+                <i class="bi bi-box-seam me-2"></i><?php echo e($fromDuplicate ? 'New Product (from duplicate)' : 'New Product'); ?>
+
             </div>
             <div class="card-body">
                 <form action="<?php echo e(route('products.store')); ?>" method="POST" enctype="multipart/form-data">
@@ -25,7 +35,7 @@ $message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
 unset($__errorArgs, $__bag); ?>" 
-                                   value="<?php echo e(old('name')); ?>" placeholder="e.g., Blue Ballpoint Pen" required>
+                                   value="<?php echo e(old('name', $d->name ?? '')); ?>" placeholder="e.g., Blue Ballpoint Pen" required>
                             <?php $__errorArgs = ['name'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
@@ -49,7 +59,7 @@ endif;
 unset($__errorArgs, $__bag); ?>" required>
                                 <option value="">Select Category</option>
                                 <?php $__currentLoopData = $categories; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $category): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                    <option value="<?php echo e($category->id); ?>" <?php echo e(old('category_id') == $category->id ? 'selected' : ''); ?>>
+                                    <option value="<?php echo e($category->id); ?>" <?php echo e(old('category_id', $d->category_id ?? '') == $category->id ? 'selected' : ''); ?>>
                                         <?php echo e($category->name); ?>
 
                                     </option>
@@ -101,7 +111,7 @@ $message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
 unset($__errorArgs, $__bag); ?>" 
-                                   value="<?php echo e(old('barcode')); ?>" placeholder="Optional">
+                                   value="<?php echo e(old('barcode', $fromDuplicate ? '' : '')); ?>" placeholder="Optional">
                             <?php $__errorArgs = ['barcode'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
@@ -125,7 +135,7 @@ $message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
 unset($__errorArgs, $__bag); ?>" 
-                                  rows="3" placeholder="Product description"><?php echo e(old('description')); ?></textarea>
+                                  rows="3" placeholder="Product description"><?php echo e(old('description', $d->description ?? '')); ?></textarea>
                         <?php $__errorArgs = ['description'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
@@ -142,7 +152,7 @@ unset($__errorArgs, $__bag); ?>
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Cost Price <span class="text-danger">*</span></label>
                             <div class="input-group">
-                                <span class="input-group-text">₹</span>
+                                <span class="input-group-text"><?php echo e($currency); ?></span>
                                 <input type="number" name="cost_price" step="0.01" min="0" 
                                        class="form-control <?php $__errorArgs = ['cost_price'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
@@ -152,7 +162,7 @@ $message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
 unset($__errorArgs, $__bag); ?>" 
-                                       value="<?php echo e(old('cost_price')); ?>" placeholder="0.00" required>
+                                       value="<?php echo e(old('cost_price', $d->cost_price ?? '')); ?>" placeholder="0.00" required>
                             </div>
                             <?php $__errorArgs = ['cost_price'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
@@ -168,7 +178,7 @@ unset($__errorArgs, $__bag); ?>
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Selling Price <span class="text-danger">*</span></label>
                             <div class="input-group">
-                                <span class="input-group-text">₹</span>
+                                <span class="input-group-text"><?php echo e($currency); ?></span>
                                 <input type="number" name="selling_price" step="0.01" min="0" 
                                        class="form-control <?php $__errorArgs = ['selling_price'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
@@ -178,7 +188,7 @@ $message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
 unset($__errorArgs, $__bag); ?>" 
-                                       value="<?php echo e(old('selling_price')); ?>" placeholder="0.00" required>
+                                       value="<?php echo e(old('selling_price', $d->selling_price ?? '')); ?>" placeholder="0.00" required>
                             </div>
                             <?php $__errorArgs = ['selling_price'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
@@ -205,7 +215,7 @@ $message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
 unset($__errorArgs, $__bag); ?>" 
-                                   value="<?php echo e(old('quantity', 0)); ?>" required>
+                                   value="<?php echo e(old('quantity', $fromDuplicate ? 0 : 0)); ?>" required>
                             <?php $__errorArgs = ['quantity'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
@@ -228,7 +238,7 @@ $message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
 unset($__errorArgs, $__bag); ?>" 
-                                   value="<?php echo e(old('alert_quantity', 10)); ?>" required>
+                                   value="<?php echo e(old('alert_quantity', $d->alert_quantity ?? 10)); ?>" required>
                             <small class="text-muted">Notify when stock falls below</small>
                             <?php $__errorArgs = ['alert_quantity'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
@@ -251,12 +261,13 @@ $message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
 unset($__errorArgs, $__bag); ?>" required>
-                                <option value="piece" <?php echo e(old('unit') == 'piece' ? 'selected' : ''); ?>>Piece</option>
-                                <option value="pack" <?php echo e(old('unit') == 'pack' ? 'selected' : ''); ?>>Pack</option>
-                                <option value="box" <?php echo e(old('unit') == 'box' ? 'selected' : ''); ?>>Box</option>
-                                <option value="dozen" <?php echo e(old('unit') == 'dozen' ? 'selected' : ''); ?>>Dozen</option>
-                                <option value="ream" <?php echo e(old('unit') == 'ream' ? 'selected' : ''); ?>>Ream</option>
-                                <option value="set" <?php echo e(old('unit') == 'set' ? 'selected' : ''); ?>>Set</option>
+                                <?php $unit = old('unit', $d->unit ?? 'piece'); ?>
+                                <option value="piece" <?php echo e($unit == 'piece' ? 'selected' : ''); ?>>Piece</option>
+                                <option value="pack" <?php echo e($unit == 'pack' ? 'selected' : ''); ?>>Pack</option>
+                                <option value="box" <?php echo e($unit == 'box' ? 'selected' : ''); ?>>Box</option>
+                                <option value="dozen" <?php echo e($unit == 'dozen' ? 'selected' : ''); ?>>Dozen</option>
+                                <option value="ream" <?php echo e($unit == 'ream' ? 'selected' : ''); ?>>Ream</option>
+                                <option value="set" <?php echo e($unit == 'set' ? 'selected' : ''); ?>>Set</option>
                             </select>
                             <?php $__errorArgs = ['unit'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
@@ -281,7 +292,7 @@ $message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
 unset($__errorArgs, $__bag); ?>" accept="image/*">
-                        <small class="text-muted">Max 2MB. Formats: JPEG, PNG, GIF</small>
+                        <small class="text-muted">Max 2MB. Formats: JPEG, PNG, GIF<?php echo e($fromDuplicate ? '. Duplicate does not copy image.' : ''); ?></small>
                         <?php $__errorArgs = ['image'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
@@ -297,7 +308,7 @@ unset($__errorArgs, $__bag); ?>
                     <div class="mb-4">
                         <div class="form-check form-switch">
                             <input type="checkbox" name="is_active" class="form-check-input" id="is_active" 
-                                   <?php echo e(old('is_active', true) ? 'checked' : ''); ?>>
+                                   <?php echo e(old('is_active', $d->is_active ?? true) ? 'checked' : ''); ?>>
                             <label class="form-check-label" for="is_active">Active</label>
                         </div>
                     </div>

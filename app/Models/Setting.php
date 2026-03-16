@@ -45,4 +45,23 @@ class Setting extends Model
         }
         Cache::forget('all_settings');
     }
+
+    /**
+     * Get payment methods as array of ['code' => ..., 'name' => ...]
+     */
+    public static function getPaymentMethods(): array
+    {
+        $json = self::get('payment_methods');
+        if ($json) {
+            $decoded = json_decode($json, true);
+            if (is_array($decoded)) {
+                return $decoded;
+            }
+        }
+        return [
+            ['code' => 'cash', 'name' => 'Cash'],
+            ['code' => 'card', 'name' => 'Card'],
+            ['code' => 'upi', 'name' => 'UPI'],
+        ];
+    }
 }

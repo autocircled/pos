@@ -10,6 +10,9 @@
             <div class="card-header d-flex justify-content-between align-items-center">
                 <span><i class="bi bi-box-seam me-2"></i>Product Information</span>
                 <div class="btn-group btn-group-sm">
+                    <a href="<?php echo e(route('products.duplicate', $product)); ?>" class="btn btn-outline-secondary">
+                        <i class="bi bi-copy me-1"></i>Duplicate
+                    </a>
                     <a href="<?php echo e(route('products.edit', $product)); ?>" class="btn btn-outline-primary">
                         <i class="bi bi-pencil me-1"></i>Edit
                     </a>
@@ -19,7 +22,7 @@
                 <div class="row">
                     <div class="col-md-4 text-center mb-4">
                         <?php if($product->image): ?>
-                            <img src="<?php echo e(asset('storage/' . $product->image)); ?>" alt="<?php echo e($product->name); ?>" 
+                            <img src="<?php echo e($product->image_url); ?>" alt="<?php echo e($product->name); ?>" 
                                  class="img-fluid rounded" style="max-height: 200px;">
                         <?php else: ?>
                             <div class="bg-light rounded d-flex align-items-center justify-content-center mx-auto" 
@@ -53,15 +56,15 @@
                         <div class="row mb-3">
                             <div class="col-4">
                                 <small class="text-muted d-block">Cost Price</small>
-                                <span>₹<?php echo e(number_format($product->cost_price, 2)); ?></span>
+                                <span><?php echo e($currency); ?><?php echo e(number_format($product->cost_price, 2)); ?></span>
                             </div>
                             <div class="col-4">
                                 <small class="text-muted d-block">Selling Price</small>
-                                <span class="fw-bold text-success">₹<?php echo e(number_format($product->selling_price, 2)); ?></span>
+                                <span class="fw-bold text-success"><?php echo e($currency); ?><?php echo e(number_format($product->selling_price, 2)); ?></span>
                             </div>
                             <div class="col-4">
                                 <small class="text-muted d-block">Profit Margin</small>
-                                <span>₹<?php echo e(number_format($product->getProfit(), 2)); ?></span>
+                                <span><?php echo e($currency); ?><?php echo e(number_format($product->getProfit(), 2)); ?></span>
                             </div>
                         </div>
                         
@@ -96,8 +99,8 @@
                                         <a href="<?php echo e(route('pos.receipt', $item->sale)); ?>"><?php echo e($item->sale->invoice_number); ?></a>
                                     </td>
                                     <td><?php echo e($item->quantity); ?></td>
-                                    <td>₹<?php echo e(number_format($item->unit_price, 2)); ?></td>
-                                    <td class="fw-semibold">₹<?php echo e(number_format($item->total, 2)); ?></td>
+                                    <td><?php echo e($currency); ?><?php echo e(number_format($item->unit_price, 2)); ?></td>
+                                    <td class="fw-semibold"><?php echo e($currency); ?><?php echo e(number_format($item->total, 2)); ?></td>
                                     <td><?php echo e($item->created_at->format('d M Y, h:i A')); ?></td>
                                 </tr>
                             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>

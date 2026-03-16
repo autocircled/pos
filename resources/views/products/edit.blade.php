@@ -133,7 +133,7 @@
                         <label class="form-label">Product Image</label>
                         @if($product->image)
                             <div class="mb-2">
-                                <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" 
+                                <img src="{{ $product->image_url }}" alt="{{ $product->name }}" 
                                      class="rounded" style="max-width: 150px;">
                             </div>
                         @endif

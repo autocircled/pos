@@ -142,7 +142,7 @@ unset($__errorArgs, $__bag); ?>
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Cost Price <span class="text-danger">*</span></label>
                             <div class="input-group">
-                                <span class="input-group-text">₹</span>
+                                <span class="input-group-text"><?php echo e($currency); ?></span>
                                 <input type="number" name="cost_price" step="0.01" min="0" 
                                        class="form-control <?php $__errorArgs = ['cost_price'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
@@ -168,7 +168,7 @@ unset($__errorArgs, $__bag); ?>
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Selling Price <span class="text-danger">*</span></label>
                             <div class="input-group">
-                                <span class="input-group-text">₹</span>
+                                <span class="input-group-text"><?php echo e($currency); ?></span>
                                 <input type="number" name="selling_price" step="0.01" min="0" 
                                        class="form-control <?php $__errorArgs = ['selling_price'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
@@ -274,7 +274,7 @@ unset($__errorArgs, $__bag); ?>
                         <label class="form-label">Product Image</label>
                         <?php if($product->image): ?>
                             <div class="mb-2">
-                                <img src="<?php echo e(asset('storage/' . $product->image)); ?>" alt="<?php echo e($product->name); ?>" 
+                                <img src="<?php echo e($product->image_url); ?>" alt="<?php echo e($product->name); ?>" 
                                      class="rounded" style="max-width: 150px;">
                             </div>
                         <?php endif; ?>

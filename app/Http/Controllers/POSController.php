@@ -6,8 +6,10 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
+use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class POSController extends Controller
 {
@@ -18,8 +20,9 @@ class POSController extends Controller
             ->where('quantity', '>', 0)
             ->with('category')
             ->get();
+        $paymentMethods = Setting::getPaymentMethods();
 
-        return view('pos.index', compact('categories', 'products'));
+        return view('pos.index', compact('categories', 'products', 'paymentMethods'));
     }
 
     public function searchProducts(Request $request)
@@ -55,6 +58,8 @@ class POSController extends Controller
 
     public function checkout(Request $request)
     {
+        $allowedPaymentCodes = array_column(Setting::getPaymentMethods(), 'code');
+
         $validated = $request->validate([
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
@@ -65,7 +70,7 @@ class POSController extends Controller
             'discount' => 'nullable|numeric|min:0',
             'tax' => 'nullable|numeric|min:0',
             'paid_amount' => 'required|numeric|min:0',
-            'payment_method' => 'required|in:cash,card,upi',
+            'payment_method' => ['required', 'string', 'max:50', Rule::in($allowedPaymentCodes)],
             'notes' => 'nullable|string',
         ]);
 
