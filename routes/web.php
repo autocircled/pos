@@ -1,10 +1,12 @@
 <?php
 
+use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\POSController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\UserController;
@@ -44,13 +46,19 @@ Route::middleware('auth')->group(function () {
     Route::get('/reports/inventory', [ReportController::class, 'inventory'])->name('reports.inventory');
     Route::get('/reports/profit', [ReportController::class, 'profit'])->name('reports.profit');
 
+    // Profile (own password)
+    Route::get('/profile/password', [ProfileController::class, 'editPassword'])->name('profile.password.edit');
+    Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
+
     // Settings
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
     Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
 
-    // User management (admin only)
+    // User management & Activity log (admin only)
     Route::middleware('admin')->group(function () {
         Route::resource('users', UserController::class)->except(['show']);
         Route::post('/users/{user}/toggle-active', [UserController::class, 'toggleActive'])->name('users.toggle-active');
+        Route::get('/activity-log', [ActivityLogController::class, 'index'])->name('activity-log.index');
+        Route::get('/activity-log/{activity_log}', [ActivityLogController::class, 'show'])->name('activity-log.show');
     });
 });

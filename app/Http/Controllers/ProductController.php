@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ActivityLog;
 use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Http\Request;
@@ -94,7 +95,9 @@ class ProductController extends Controller
             $validated['image'] = $this->storeProductImage($request->file('image'));
         }
 
-        Product::create($validated);
+        $product = Product::create($validated);
+
+        ActivityLog::log('created', Product::class, $product->id, null, $product->only($product->getFillable()), 'Product created');
 
         return redirect()->route('products.index')
             ->with('success', 'Product created successfully.');
@@ -138,7 +141,11 @@ class ProductController extends Controller
             $validated['image'] = $this->storeProductImage($request->file('image'));
         }
 
+        $oldValues = $product->only($product->getFillable());
         $product->update($validated);
+        $newValues = $product->fresh()->only($product->getFillable());
+
+        ActivityLog::log('updated', Product::class, $product->id, $oldValues, $newValues, 'Product updated');
 
         return redirect()->route('products.index')
             ->with('success', 'Product updated successfully.');
@@ -146,11 +153,20 @@ class ProductController extends Controller
 
     public function destroy(Product $product)
     {
+        if (!auth()->user()->isAdmin()) {
+            return back()->with('error', 'You do not have permission to delete products.');
+        }
+
+        $oldValues = $product->only($product->getFillable());
+        $productId = $product->id;
+
         if ($product->image) {
             $this->deleteProductImage($product->image);
         }
 
         $product->delete();
+
+        ActivityLog::log('deleted', Product::class, $productId, $oldValues, null, 'Product deleted');
 
         return redirect()->route('products.index')
             ->with('success', 'Product deleted successfully.');

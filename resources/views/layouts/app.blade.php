@@ -270,6 +270,9 @@
                 <a class="nav-link {{ request()->routeIs('users.*') ? 'active' : '' }}" href="{{ route('users.index') }}">
                     <i class="bi bi-people"></i> Users
                 </a>
+                <a class="nav-link {{ request()->routeIs('activity-log.*') ? 'active' : '' }}" href="{{ route('activity-log.index') }}">
+                    <i class="bi bi-journal-text"></i> Activity Log
+                </a>
             @endif
             <a class="nav-link {{ request()->routeIs('settings.*') ? 'active' : '' }}" href="{{ route('settings.index') }}">
                 <i class="bi bi-gear"></i> Settings
@@ -295,10 +298,21 @@
                     <i class="bi bi-chevron-down"></i>
                 </div>
                 <ul class="dropdown-menu dropdown-menu-end">
+                    <li>
+                        <a class="dropdown-item" href="{{ route('profile.password.edit') }}">
+                            <i class="bi bi-key me-2"></i> Change password
+                        </a>
+                    </li>
                     @if(auth()->user() && auth()->user()->isAdmin())
+                        <li><hr class="dropdown-divider"></li>
                         <li>
                             <a class="dropdown-item" href="{{ route('users.index') }}">
                                 <i class="bi bi-people me-2"></i> Users
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{{ route('activity-log.index') }}">
+                                <i class="bi bi-journal-text me-2"></i> Activity Log
                             </a>
                         </li>
                         <li>

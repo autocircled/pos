@@ -53,13 +53,20 @@ class UserController extends Controller
             'is_active' => ['sometimes', 'boolean'],
         ]);
 
-        $user = User::create([
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'password' => Hash::make($data['password']),
-            'role' => $data['role'],
-            'is_active' => $request->boolean('is_active', true),
-        ]);
+        try {
+            $user = User::create([
+                'name' => $data['name'],
+                'email' => $data['email'],
+                'password' => $data['password'], // hashed by User model cast
+                'role' => $data['role'],
+                'is_active' => $request->boolean('is_active', true),
+            ]);
+        } catch (\Throwable $e) {
+            report($e);
+            return redirect()->route('users.create')
+                ->with('error', 'Failed to create user. Please try again.')
+                ->withInput();
+        }
 
         return redirect()->route('users.index')->with('success', 'User created successfully.');
     }

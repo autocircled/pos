@@ -125,14 +125,16 @@
                                     <a href="<?php echo e(route('products.duplicate', $product)); ?>" class="btn btn-outline-secondary" title="Duplicate">
                                         <i class="bi bi-copy"></i>
                                     </a>
-                                    <form action="<?php echo e(route('products.destroy', $product)); ?>" method="POST" class="d-inline" 
-                                          onsubmit="return confirm('Are you sure you want to delete this product?')">
-                                        <?php echo csrf_field(); ?>
-                                        <?php echo method_field('DELETE'); ?>
-                                        <button type="submit" class="btn btn-outline-danger" title="Delete">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </form>
+                                    <?php if(auth()->user()->isAdmin()): ?>
+                                        <form action="<?php echo e(route('products.destroy', $product)); ?>" method="POST" class="d-inline"
+                                              onsubmit="return confirm('Are you sure you want to delete this product?')">
+                                            <?php echo csrf_field(); ?>
+                                            <?php echo method_field('DELETE'); ?>
+                                            <button type="submit" class="btn btn-outline-danger" title="Delete">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    <?php endif; ?>
                                 </div>
                             </td>
                         </tr>

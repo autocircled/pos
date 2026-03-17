@@ -11,6 +11,18 @@
                 <i class="bi bi-person-plus me-2"></i>New User
             </div>
             <div class="card-body">
+                @if($errors->any())
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <strong>Please fix the following errors:</strong>
+                        <ul class="mb-0 mt-2">
+                            @foreach($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                @endif
+
                 <form action="{{ route('users.store') }}" method="POST">
                     @csrf
 
@@ -61,7 +73,7 @@
                         <div class="col-md-6 mb-3">
                             <label class="form-label d-block">Status</label>
                             <div class="form-check form-switch">
-                                <input type="checkbox" name="is_active" class="form-check-input" id="is_active"
+                                <input type="checkbox" name="is_active" value="1" class="form-check-input" id="is_active"
                                        {{ old('is_active', true) ? 'checked' : '' }}>
                                 <label class="form-check-label" for="is_active">Active</label>
                             </div>

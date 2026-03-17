@@ -11,6 +11,18 @@
                 <i class="bi bi-person-plus me-2"></i>New User
             </div>
             <div class="card-body">
+                <?php if($errors->any()): ?>
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <strong>Please fix the following errors:</strong>
+                        <ul class="mb-0 mt-2">
+                            <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <li><?php echo e($error); ?></li>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                        </ul>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                <?php endif; ?>
+
                 <form action="<?php echo e(route('users.store')); ?>" method="POST">
                     <?php echo csrf_field(); ?>
 
@@ -117,7 +129,7 @@ unset($__errorArgs, $__bag); ?>
                         <div class="col-md-6 mb-3">
                             <label class="form-label d-block">Status</label>
                             <div class="form-check form-switch">
-                                <input type="checkbox" name="is_active" class="form-check-input" id="is_active"
+                                <input type="checkbox" name="is_active" value="1" class="form-check-input" id="is_active"
                                        <?php echo e(old('is_active', true) ? 'checked' : ''); ?>>
                                 <label class="form-check-label" for="is_active">Active</label>
                             </div>
