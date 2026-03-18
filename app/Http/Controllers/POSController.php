@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\Setting;
+use Illuminate\Support\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -66,6 +67,7 @@ class POSController extends Controller
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.quantity' => 'required|integer|min:1',
             'items.*.discount' => 'nullable|numeric|min:0',
+            'sale_date' => 'nullable|date|before_or_equal:today',
             'customer_name' => 'nullable|string|max:255',
             'customer_phone' => 'nullable|string|max:20',
             'discount' => 'nullable|numeric|min:0',
@@ -77,6 +79,10 @@ class POSController extends Controller
 
         try {
             DB::beginTransaction();
+
+            $saleDate = !empty($validated['sale_date'])
+                ? Carbon::parse($validated['sale_date'])->setTimeFromTimeString(now()->format('H:i:s'))
+                : now();
 
             $subtotal = 0;
             $itemsData = [];
@@ -109,8 +115,8 @@ class POSController extends Controller
                 throw new \Exception('Paid amount is less than total.');
             }
 
-            $sale = Sale::create([
-                'invoice_number' => Sale::generateInvoiceNumber(),
+            $sale = new Sale([
+                'invoice_number' => Sale::generateInvoiceNumber($saleDate),
                 'user_id' => auth()->id(),
                 'customer_name' => $validated['customer_name'],
                 'customer_phone' => $validated['customer_phone'],
@@ -124,6 +130,9 @@ class POSController extends Controller
                 'status' => 'completed',
                 'notes' => $validated['notes'],
             ]);
+            $sale->created_at = $saleDate;
+            $sale->updated_at = $saleDate;
+            $sale->save();
 
             foreach ($itemsData as $itemData) {
                 SaleItem::create([

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
 class Sale extends Model
 {
@@ -44,11 +45,12 @@ class Sale extends Model
         return $this->hasMany(SaleItem::class);
     }
 
-    public static function generateInvoiceNumber(): string
+    public static function generateInvoiceNumber(?Carbon $saleDate = null): string
     {
+        $saleDate = $saleDate ?? now();
         $prefix = 'INV';
-        $date = date('Ymd');
-        $count = self::whereDate('created_at', today())->count() + 1;
+        $date = $saleDate->format('Ymd');
+        $count = self::whereDate('created_at', $saleDate->toDateString())->count() + 1;
         return $prefix . $date . str_pad($count, 4, '0', STR_PAD_LEFT);
     }
 

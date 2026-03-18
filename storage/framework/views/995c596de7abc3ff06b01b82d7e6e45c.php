@@ -269,6 +269,13 @@
             </div>
             <div class="modal-body">
                 <div class="mb-3">
+                    <label class="form-label">Sale Date</label>
+                    <input type="date" id="saleDate" class="form-control"
+                           value="<?php echo e(now()->toDateString()); ?>"
+                           max="<?php echo e(now()->toDateString()); ?>">
+                    <small class="text-muted">Backdated sales are allowed. Future dates are not allowed.</small>
+                </div>
+                <div class="mb-3">
                     <label class="form-label">Customer Name</label>
                     <input type="text" id="customerName" class="form-control" placeholder="Optional">
                 </div>
@@ -323,7 +330,6 @@
 <script>
 let cart = [];
 let emptyCartEl = null;
-const products = <?php echo json_encode($products, 15, 512) ?>;
 const cs = (typeof window.currencySymbol !== 'undefined') ? window.currencySymbol : '৳';
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -574,6 +580,10 @@ function completeSale() {
             quantity: item.quantity,
             discount: item.discount
         })),
+        sale_date: (function () {
+            const el = document.getElementById('saleDate');
+            return (el && el.value) ? el.value : null;
+        })(),
         customer_name: document.getElementById('customerName').value,
         customer_phone: document.getElementById('customerPhone').value,
         discount: parseFloat(document.getElementById('discount').value) || 0,
