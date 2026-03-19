@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BackupController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\POSController;
@@ -54,11 +55,18 @@ Route::middleware('auth')->group(function () {
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
     Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
 
-    // User management & Activity log (admin only)
+    // User management, Activity log & Backups (admin only)
     Route::middleware('admin')->group(function () {
         Route::resource('users', UserController::class)->except(['show']);
         Route::post('/users/{user}/toggle-active', [UserController::class, 'toggleActive'])->name('users.toggle-active');
         Route::get('/activity-log', [ActivityLogController::class, 'index'])->name('activity-log.index');
         Route::get('/activity-log/{activity_log}', [ActivityLogController::class, 'show'])->name('activity-log.show');
+
+        // Database backups
+        Route::get('/backups', [BackupController::class, 'index'])->name('backups.index');
+        Route::post('/backups/run', [BackupController::class, 'run'])->name('backups.run');
+        Route::get('/backups/{file}/download', [BackupController::class, 'download'])->name('backups.download');
+        Route::post('/backups/{file}/restore', [BackupController::class, 'restore'])->name('backups.restore');
+        Route::delete('/backups/{file}', [BackupController::class, 'destroy'])->name('backups.destroy');
     });
 });

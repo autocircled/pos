@@ -273,6 +273,9 @@
                 <a class="nav-link <?php echo e(request()->routeIs('activity-log.*') ? 'active' : ''); ?>" href="<?php echo e(route('activity-log.index')); ?>">
                     <i class="bi bi-journal-text"></i> Activity Log
                 </a>
+                <a class="nav-link <?php echo e(request()->routeIs('backups.*') ? 'active' : ''); ?>" href="<?php echo e(route('backups.index')); ?>">
+                    <i class="bi bi-database"></i> Backups
+                </a>
             <?php endif; ?>
             <a class="nav-link <?php echo e(request()->routeIs('settings.*') ? 'active' : ''); ?>" href="<?php echo e(route('settings.index')); ?>">
                 <i class="bi bi-gear"></i> Settings

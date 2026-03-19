@@ -273,6 +273,9 @@
                 <a class="nav-link {{ request()->routeIs('activity-log.*') ? 'active' : '' }}" href="{{ route('activity-log.index') }}">
                     <i class="bi bi-journal-text"></i> Activity Log
                 </a>
+                <a class="nav-link {{ request()->routeIs('backups.*') ? 'active' : '' }}" href="{{ route('backups.index') }}">
+                    <i class="bi bi-database"></i> Backups
+                </a>
             @endif
             <a class="nav-link {{ request()->routeIs('settings.*') ? 'active' : '' }}" href="{{ route('settings.index') }}">
                 <i class="bi bi-gear"></i> Settings
