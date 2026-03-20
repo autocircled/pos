@@ -251,6 +251,17 @@
                 <i class="bi bi-box-seam"></i> Products
             </a>
             
+            <div class="nav-section">Purchasing</div>
+            <a class="nav-link {{ request()->routeIs('suppliers.*') ? 'active' : '' }}" href="{{ route('suppliers.index') }}">
+                <i class="bi bi-truck"></i> Suppliers
+            </a>
+            <a class="nav-link {{ request()->routeIs('purchases.*') ? 'active' : '' }}" href="{{ route('purchases.index') }}">
+                <i class="bi bi-bag-check"></i> Purchases
+            </a>
+            <a class="nav-link {{ request()->routeIs('expenses.*') ? 'active' : '' }}" href="{{ route('expenses.index') }}">
+                <i class="bi bi-cash-stack"></i> Expenses
+            </a>
+
             <div class="nav-section">Reports</div>
             <a class="nav-link {{ request()->routeIs('reports.daily') ? 'active' : '' }}" href="{{ route('reports.daily') }}">
                 <i class="bi bi-calendar-day"></i> Daily Report
