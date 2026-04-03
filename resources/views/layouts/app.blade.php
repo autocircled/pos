@@ -242,6 +242,21 @@
             <a class="nav-link {{ request()->routeIs('pos.history') ? 'active' : '' }}" href="{{ route('pos.history') }}">
                 <i class="bi bi-clock-history"></i> Sales History
             </a>
+            <a class="nav-link {{ request()->routeIs('pos.due-payments') ? 'active' : '' }}" href="{{ route('pos.due-payments') }}">
+                <i class="bi bi-cash-stack"></i> Due Payments
+                @if(auth()->user()->isAdmin())
+                    @php
+                        $dueCount = \App\Models\Sale::where('due_amount', '>', 0)
+                            ->where(function($q) {
+                                $q->where('payment_status', 'partial')
+                                  ->orWhere('payment_status', 'due');
+                            })->count();
+                    @endphp
+                    @if($dueCount > 0)
+                        <span class="badge bg-danger ms-auto">{{ $dueCount }}</span>
+                    @endif
+                @endif
+            </a>
             
             <div class="nav-section">Inventory</div>
             <a class="nav-link {{ request()->routeIs('categories.*') ? 'active' : '' }}" href="{{ route('categories.index') }}">

@@ -42,7 +42,11 @@ Route::middleware('auth')->group(function () {
     Route::post('/pos/checkout', [POSController::class, 'checkout'])->name('pos.checkout');
     Route::get('/pos/receipt/{sale}', [POSController::class, 'receipt'])->name('pos.receipt');
     Route::get('/pos/history', [POSController::class, 'salesHistory'])->name('pos.history');
+    Route::get('/pos/{sale}/edit', [POSController::class, 'edit'])->name('pos.edit');
+    Route::put('/pos/{sale}', [POSController::class, 'update'])->name('pos.update');
     Route::post('/pos/{sale}/cancel', [POSController::class, 'cancelSale'])->name('pos.cancel');
+    Route::get('/pos/due-payments', [POSController::class, 'duePayments'])->name('pos.due-payments');
+    Route::post('/pos/{sale}/add-due-payment', [POSController::class, 'addDuePayment'])->name('pos.add-due-payment');
 
     // Reports
     Route::get('/reports/daily', [ReportController::class, 'daily'])->name('reports.daily');

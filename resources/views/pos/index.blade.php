@@ -234,14 +234,14 @@
                     <span>Discount</span>
                     <div class="input-group input-group-sm" style="width: 120px;">
                         <span class="input-group-text">{{ $currency }}</span>
-                        <input type="number" id="discount" class="form-control" value="0" min="0" step="0.01">
+                        <input type="number" id="discount" class="form-control" value="0" min="0" step="1">
                     </div>
                 </div>
                 <div class="summary-row">
                     <span>Tax</span>
                     <div class="input-group input-group-sm" style="width: 120px;">
                         <span class="input-group-text">{{ $currency }}</span>
-                        <input type="number" id="tax" class="form-control" value="0" min="0" step="0.01">
+                        <input type="number" id="tax" class="form-control" value="0" min="0" step="1">
                     </div>
                 </div>
                 <div class="summary-row total">
@@ -305,9 +305,19 @@
                         <input type="number" id="paidAmount" class="form-control" min="0" step="0.01">
                     </div>
                 </div>
-                <div class="mt-3 p-3 bg-light rounded text-center">
-                    <small class="text-muted">Change</small>
-                    <h3 id="changeAmount" class="mb-0 text-success">{{ $currency }}0.00</h3>
+                <div class="row mt-3">
+                    <div class="col-6">
+                        <div class="p-3 bg-light rounded text-center">
+                            <small class="text-muted">Change</small>
+                            <h4 id="changeAmount" class="mb-0 text-success">{{ $currency }}0.00</h4>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="p-3 bg-light rounded text-center">
+                            <small class="text-muted">Due Amount</small>
+                            <h4 id="dueAmount" class="mb-0 text-danger">{{ $currency }}0.00</h4>
+                        </div>
+                    </div>
                 </div>
                 <div class="mb-3 mt-3">
                     <label class="form-label">Notes</label>
@@ -468,12 +478,12 @@ function renderCart() {
     container.innerHTML = cart.map((item, index) => `
         <div class="cart-item" data-cart-item="${index}">
             <div class="info">
-                <div class="name">${escapeHtml(item.name)}</div>
+                <div class="name"><a href="/products/${item.product_id}" target="_blank">${escapeHtml(item.name)}</a></div>
                 <div class="price cart-item-total">${cs}${item.price.toFixed(2)} × ${item.quantity} = ${cs}${(item.price * item.quantity).toFixed(2)}</div>
             </div>
             <div class="qty-control">
                 <button type="button" class="qty-btn" data-cart-index="${index}" data-cart-action="decrease">−</button>
-                <input type="number" class="qty-input" data-cart-index="${index}" data-cart-qty value="${item.quantity}" min="1" max="${item.max_qty}">
+                <input type="text" class="qty-input" style="width: 60px;" data-cart-index="${index}" data-cart-qty value="${item.quantity}" min="1" max="${item.max_qty}">
                 <button type="button" class="qty-btn" data-cart-index="${index}" data-cart-action="increase">+</button>
             </div>
             <button type="button" class="btn btn-sm btn-link text-danger" data-cart-index="${index}" data-cart-action="remove" title="Remove">
@@ -559,17 +569,21 @@ function calculateChange() {
     const total = parseTotalText(document.getElementById('total'));
     const paid = parseFloat(document.getElementById('paidAmount').value) || 0;
     const change = paid - total;
+    const due = Math.abs(Math.min(0, change));
     
     document.getElementById('changeAmount').textContent = cs + Math.max(0, change).toFixed(2);
-    document.getElementById('changeAmount').className = change >= 0 ? 'mb-0 text-success' : 'mb-0 text-danger';
+    document.getElementById('changeAmount').className = change >= 0 ? 'mb-0 text-success' : 'mb-0 text-muted';
+    
+    document.getElementById('dueAmount').textContent = cs + due.toFixed(2);
+    document.getElementById('dueAmount').className = due > 0 ? 'mb-0 text-danger' : 'mb-0 text-muted';
 }
 
 function completeSale() {
     const total = parseTotalText(document.getElementById('total'));
     const paid = parseFloat(document.getElementById('paidAmount').value) || 0;
     
-    if (paid < total) {
-        alert('Paid amount cannot be less than total');
+    if (paid <= 0) {
+        alert('Paid amount must be greater than 0');
         return;
     }
     

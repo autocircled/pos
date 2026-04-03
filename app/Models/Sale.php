@@ -21,6 +21,8 @@ class Sale extends Model
         'total',
         'paid_amount',
         'change_amount',
+        'due_amount',
+        'payment_status',
         'payment_method',
         'status',
         'notes',
@@ -33,6 +35,7 @@ class Sale extends Model
         'total' => 'decimal:2',
         'paid_amount' => 'decimal:2',
         'change_amount' => 'decimal:2',
+        'due_amount' => 'decimal:2',
     ];
 
     public function user()
@@ -59,5 +62,45 @@ class Sale extends Model
         return $this->items->sum(function ($item) {
             return ($item->unit_price - $item->cost_price) * $item->quantity - $item->discount;
         });
+    }
+
+    public function getPaymentStatusBadgeAttribute(): string
+    {
+        return match($this->payment_status) {
+            'paid' => '<span class="badge bg-success">Paid</span>',
+            'partial' => '<span class="badge bg-warning">Partial</span>',
+            'due' => '<span class="badge bg-danger">Due</span>',
+            default => '<span class="badge bg-secondary">Unknown</span>'
+        };
+    }
+
+    public function hasDue(): bool
+    {
+        return $this->due_amount > 0;
+    }
+
+    public function getRemainingAmount(): float
+    {
+        return max(0, $this->total - $this->paid_amount);
+    }
+
+    public function duePayments()
+    {
+        return $this->hasMany(DuePayment::class);
+    }
+
+    public function getTotalPaidAmount(): float
+    {
+        return $this->paid_amount + $this->duePayments()->sum('amount');
+    }
+
+    public function getRemainingDue(): float
+    {
+        return max(0, $this->due_amount - $this->duePayments()->sum('amount'));
+    }
+
+    public function isFullyPaid(): bool
+    {
+        return $this->getRemainingDue() <= 0;
     }
 }

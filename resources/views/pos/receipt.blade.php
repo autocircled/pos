@@ -72,6 +72,11 @@
     <button onclick="window.print()" class="btn btn-primary">
         <i class="bi bi-printer me-2"></i>Print Receipt
     </button>
+    @if($sale->hasDue() && $sale->status !== 'cancelled')
+        <a href="{{ route('pos.due-payments') }}" class="btn btn-success">
+            <i class="bi bi-cash-stack me-2"></i>Due Payments
+        </a>
+    @endif
 </div>
 
 <div class="receipt">
@@ -79,6 +84,9 @@
         <h3><i class="bi bi-pencil-square me-2"></i>Stationery POS</h3>
         <p class="mb-0 text-muted">Invoice: {{ $sale->invoice_number }}</p>
         <small>{{ $sale->created_at->format('d M Y, h:i A') }}</small>
+        @if($sale->status === 'cancelled')
+            <div class="badge bg-danger mt-2">CANCELLED</div>
+        @endif
     </div>
     
     @if($sale->customer_name)
@@ -123,20 +131,76 @@
             <span>Total</span>
             <span>{{ $currency }}{{ number_format($sale->total, 2) }}</span>
         </div>
+        
+        <!-- Payment Status -->
+        <div class="row {{ $sale->payment_status === 'paid' ? 'text-success' : ($sale->payment_status === 'partial' ? 'text-warning' : 'text-danger') }}">
+            <span>Payment Status</span>
+            <span class="fw-semibold">{{ ucfirst($sale->payment_status) }}</span>
+        </div>
+        
         <div class="row">
-            <span>Paid ({{ ucfirst($sale->payment_method) }})</span>
+            <span>Initial Payment ({{ ucfirst($sale->payment_method) }})</span>
             <span>{{ $currency }}{{ number_format($sale->paid_amount, 2) }}</span>
         </div>
+        
         @if($sale->change_amount > 0)
             <div class="row">
                 <span>Change</span>
                 <span>{{ $currency }}{{ number_format($sale->change_amount, 2) }}</span>
             </div>
         @endif
+        
+        @if($sale->due_amount > 0)
+            <div class="row text-danger">
+                <span>Original Due</span>
+                <span>{{ $currency }}{{ number_format($sale->due_amount, 2) }}</span>
+            </div>
+        @endif
+        
+        @if($sale->duePayments->count() > 0)
+            <div class="row text-success">
+                <span>Additional Payments</span>
+                <span>{{ $currency }}{{ number_format($sale->duePayments->sum('amount'), 2) }}</span>
+            </div>
+        @endif
+        
+        @if($sale->hasDue())
+            <div class="row text-danger fw-bold">
+                <span>Remaining Due</span>
+                <span>{{ $currency }}{{ number_format($sale->getRemainingDue(), 2) }}</span>
+            </div>
+        @endif
+        
+        <div class="row total">
+            <span>Total Paid</span>
+            <span>{{ $currency }}{{ number_format($sale->getTotalPaidAmount(), 2) }}</span>
+        </div>
     </div>
+    
+    <!-- Due Payment History -->
+    @if($sale->duePayments->count() > 0)
+        <div class="mb-3">
+            <h6 class="border-bottom pb-2">Payment History</h6>
+            @foreach($sale->duePayments as $payment)
+                <div class="receipt-item">
+                    <div>
+                        <div>{{ ucfirst($payment->payment_method) }} Payment</div>
+                        <div class="qty">{{ $payment->created_at->format('d M Y, h:i A') }}</div>
+                        @if($payment->notes)
+                            <div class="text-muted small">{{ $payment->notes }}</div>
+                        @endif
+                    </div>
+                    <div class="fw-semibold text-success">{{ $currency }}{{ number_format($payment->amount, 2) }}</div>
+                </div>
+            @endforeach
+        </div>
+    @endif
     
     <div class="receipt-footer">
         <p class="mb-1">Served by: {{ $sale->user->name }}</p>
+        @if($sale->notes)
+            <p class="mb-1"><small>Notes: {{ $sale->notes }}</small></p>
+        @endif
         <p class="mb-0">Thank you for shopping with us!</p>
     </div>
 </div>
