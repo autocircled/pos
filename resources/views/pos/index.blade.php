@@ -213,8 +213,25 @@
     <div class="cart-section">
         <div class="card flex-grow-1 d-flex flex-column">
             <div class="card-header">
-                <i class="bi bi-cart3 me-2"></i>Current Sale
-                <button class="btn btn-sm btn-outline-danger float-end" id="clearCart">Clear</button>
+                <div class="d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-cart3 me-2"></i>
+                        <select id="cartSelector" class="form-select form-select-sm me-2" style="width: auto;">
+                            <!-- Cart options will be populated by JavaScript -->
+                        </select>
+                    </div>
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn btn-outline-success" id="newCartBtn" title="New Cart">
+                            <i class="bi bi-plus-lg"></i>
+                        </button>
+                        <button class="btn btn-outline-danger" id="deleteCartBtn" title="Delete Cart">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                        <button class="btn btn-outline-warning" id="clearCart" title="Clear Current Cart">
+                            <i class="bi bi-arrow-clockwise"></i>
+                        </button>
+                    </div>
+                </div>
             </div>
             
             <div class="cart-items" id="cartItems">
@@ -337,12 +354,184 @@
 
 @push('scripts')
 <script>
-let cart = [];
+// Multi-cart system with local storage persistence
+let carts = {};
+let currentCartId = 'default';
 let emptyCartEl = null;
 const cs = (typeof window.currencySymbol !== 'undefined') ? window.currencySymbol : '৳';
 
+// Cart management functions
+function loadCartsFromStorage() {
+    const saved = localStorage.getItem('posCarts');
+    if (saved) {
+        carts = JSON.parse(saved);
+    } else {
+        carts = {
+            'default': {
+                id: 'default',
+                name: 'Default Cart',
+                customerName: '',
+                items: [],
+                createdAt: new Date().toISOString()
+            }
+        };
+    }
+    
+    // Load current cart ID
+    const savedCurrentCart = localStorage.getItem('posCurrentCartId');
+    if (savedCurrentCart && carts[savedCurrentCart]) {
+        currentCartId = savedCurrentCart;
+    }
+}
+
+function saveCartsToStorage() {
+    localStorage.setItem('posCarts', JSON.stringify(carts));
+    localStorage.setItem('posCurrentCartId', currentCartId);
+}
+
+function getCurrentCart() {
+    if (!carts[currentCartId]) {
+        currentCartId = 'default';
+    }
+    return carts[currentCartId];
+}
+
+function getCurrentCartItems() {
+    return getCurrentCart().items || [];
+}
+
+function setCurrentCartItems(items) {
+    getCurrentCart().items = items;
+    saveCartsToStorage();
+}
+
+function createNewCart(customerName = '') {
+    const cartId = 'cart_' + Date.now();
+    const cartName = customerName || 'Cart ' + (Object.keys(carts).length + 1);
+    
+    carts[cartId] = {
+        id: cartId,
+        name: cartName,
+        customerName: customerName,
+        items: [],
+        createdAt: new Date().toISOString()
+    };
+    
+    currentCartId = cartId;
+    saveCartsToStorage();
+    updateCartSelector();
+    renderCart();
+    
+    return cartId;
+}
+
+function switchCart(cartId) {
+    if (carts[cartId]) {
+        currentCartId = cartId;
+        saveCartsToStorage();
+        updateCartSelector();
+        renderCart();
+        updateTotals();
+    }
+}
+
+function deleteCart(cartId) {
+    if (cartId === 'default') {
+        alert('Cannot delete default cart');
+        return;
+    }
+    
+    if (confirm('Delete this cart and all its items?')) {
+        delete carts[cartId];
+        
+        if (currentCartId === cartId) {
+            currentCartId = 'default';
+        }
+        
+        saveCartsToStorage();
+        updateCartSelector();
+        renderCart();
+        updateTotals();
+    }
+}
+
+function updateCartSelector() {
+    const selector = document.getElementById('cartSelector');
+    if (!selector) return;
+    
+    selector.innerHTML = '';
+    
+    Object.keys(carts).forEach(cartId => {
+        const cart = carts[cartId];
+        const option = document.createElement('option');
+        option.value = cartId;
+        option.textContent = cart.name + (cart.items.length > 0 ? ' (' + cart.items.length + ')' : '');
+        option.selected = cartId === currentCartId;
+        selector.appendChild(option);
+    });
+}
+
+function updateCurrentCartName(customerName) {
+    const cart = getCurrentCart();
+    cart.customerName = customerName;
+    
+    if (customerName && cart.id === 'default') {
+        cart.name = customerName;
+    } else if (!customerName && cart.id !== 'default') {
+        cart.name = 'Cart ' + cart.id.replace('cart_', '');
+    }
+    
+    saveCartsToStorage();
+    updateCartSelector();
+}
+
+// Note: cart variable is now managed through getCurrentCartItems() and setCurrentCartItems() functions
+
 document.addEventListener('DOMContentLoaded', function() {
+    loadCartsFromStorage();
     emptyCartEl = document.getElementById('emptyCart');
+    
+    // Initialize cart selector
+    updateCartSelector();
+    
+    // Cart selector change event
+    const cartSelector = document.getElementById('cartSelector');
+    if (cartSelector) {
+        cartSelector.addEventListener('change', function() {
+            switchCart(this.value);
+        });
+    }
+    
+    // New cart button
+    const newCartBtn = document.getElementById('newCartBtn');
+    if (newCartBtn) {
+        newCartBtn.addEventListener('click', function() {
+            const customerName = prompt('Enter customer name (optional):');
+            createNewCart(customerName);
+        });
+    }
+    
+    // Delete cart button
+    const deleteCartBtn = document.getElementById('deleteCartBtn');
+    if (deleteCartBtn) {
+        deleteCartBtn.addEventListener('click', function() {
+            deleteCart(currentCartId);
+        });
+    }
+    
+    // Customer name change
+    const customerNameInput = document.getElementById('customerName');
+    if (customerNameInput) {
+        customerNameInput.addEventListener('input', function() {
+            updateCurrentCartName(this.value);
+        });
+        
+        // Set initial customer name
+        const currentCart = getCurrentCart();
+        if (currentCart.customerName) {
+            customerNameInput.value = currentCart.customerName;
+        }
+    }
     // Category filter
     document.querySelectorAll('.category-pill').forEach(pill => {
         pill.addEventListener('click', function() {
@@ -431,7 +620,8 @@ function filterProducts() {
 }
 
 function addToCart(product) {
-    const existingItem = cart.find(item => item.product_id === product.id);
+    const currentItems = getCurrentCartItems();
+    const existingItem = currentItems.find(item => item.product_id === product.id);
     
     if (existingItem) {
         if (existingItem.quantity < product.quantity) {
@@ -441,7 +631,7 @@ function addToCart(product) {
             return;
         }
     } else {
-        cart.push({
+        currentItems.push({
             product_id: product.id,
             name: product.name,
             price: parseFloat(product.selling_price),
@@ -451,13 +641,16 @@ function addToCart(product) {
         });
     }
     
+    setCurrentCartItems(currentItems);
     renderCart();
+    updateTotals();
 }
 
 function renderCart() {
     const container = document.getElementById('cartItems');
+    const currentItems = getCurrentCartItems();
     
-    if (cart.length === 0) {
+    if (currentItems.length === 0) {
         container.innerHTML = '';
         if (emptyCartEl) {
             emptyCartEl.style.display = 'block';
@@ -475,7 +668,7 @@ function renderCart() {
     }
     document.getElementById('checkoutBtn').disabled = false;
     
-    container.innerHTML = cart.map((item, index) => `
+    container.innerHTML = currentItems.map((item, index) => `
         <div class="cart-item" data-cart-item="${index}">
             <div class="info">
                 <div class="name"><a href="/products/${item.product_id}" target="_blank">${escapeHtml(item.name)}</a></div>
@@ -502,42 +695,50 @@ function escapeHtml(text) {
 }
 
 function updateQuantity(index, delta) {
-    if (index < 0 || index >= cart.length) return;
-    const item = cart[index];
+    const currentItems = getCurrentCartItems();
+    if (index < 0 || index >= currentItems.length) return;
+    const item = currentItems[index];
     const newQty = item.quantity + delta;
     
     if (newQty >= 1 && newQty <= item.max_qty) {
         item.quantity = newQty;
+        setCurrentCartItems(currentItems);
         renderCart();
     }
 }
 
 function setQuantity(index, value) {
-    if (index < 0 || index >= cart.length) return;
-    const item = cart[index];
+    const currentItems = getCurrentCartItems();
+    if (index < 0 || index >= currentItems.length) return;
+    const item = currentItems[index];
     const qty = parseInt(value, 10);
     
     if (!isNaN(qty) && qty >= 1 && qty <= item.max_qty) {
         item.quantity = qty;
+        setCurrentCartItems(currentItems);
         renderCart();
     }
 }
 
 function removeFromCart(index) {
-    if (index < 0 || index >= cart.length) return;
-    cart.splice(index, 1);
+    const currentItems = getCurrentCartItems();
+    if (index < 0 || index >= currentItems.length) return;
+    currentItems.splice(index, 1);
+    setCurrentCartItems(currentItems);
     renderCart();
 }
 
 function clearCart() {
-    if (cart.length > 0 && confirm('Clear all items from cart?')) {
-        cart = [];
+    const currentItems = getCurrentCartItems();
+    if (currentItems.length > 0 && confirm('Clear all items from current cart?')) {
+        setCurrentCartItems([]);
         renderCart();
     }
 }
 
 function updateTotals() {
-    const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const currentItems = getCurrentCartItems();
+    const subtotal = currentItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     const discountEl = document.getElementById('discount');
     const taxEl = document.getElementById('tax');
     const discount = discountEl ? (parseFloat(discountEl.value) || 0) : 0;
@@ -579,6 +780,7 @@ function calculateChange() {
 }
 
 function completeSale() {
+    const currentItems = getCurrentCartItems();
     const total = parseTotalText(document.getElementById('total'));
     const paid = parseFloat(document.getElementById('paidAmount').value) || 0;
     
@@ -588,7 +790,7 @@ function completeSale() {
     }
     
     const data = {
-        items: cart.map(item => ({
+        items: currentItems.map(item => ({
             product_id: item.product_id,
             quantity: item.quantity,
             discount: item.discount
@@ -617,6 +819,8 @@ function completeSale() {
     .then(response => response.json())
     .then(result => {
         if (result.success) {
+            // Clear current cart after successful sale
+            setCurrentCartItems([]);
             window.location.href = result.redirect;
         } else {
             alert(result.message);
