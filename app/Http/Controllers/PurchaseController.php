@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Models\Purchase;
 use App\Models\PurchaseItem;
+use App\Models\InventoryBatch;
 use App\Models\Setting;
 use App\Models\Supplier;
 use Illuminate\Http\Request;
@@ -109,7 +110,7 @@ class PurchaseController extends Controller
             ]);
 
             foreach ($itemsData as $itemData) {
-                PurchaseItem::create([
+                $purchaseItem = PurchaseItem::create([
                     'purchase_id'  => $purchase->id,
                     'product_id'   => $itemData['product']->id,
                     'product_name' => $itemData['product']->name,
@@ -118,10 +119,19 @@ class PurchaseController extends Controller
                     'total'        => $itemData['total'],
                 ]);
 
-                // If received immediately, update product stock and cost price
+                // If received immediately, update product stock and create FIFO batch
                 if ($validated['status'] === 'received') {
                     $itemData['product']->increment('quantity', $itemData['quantity']);
                     $itemData['product']->update(['cost_price' => $itemData['cost_price']]);
+                    
+                    // Create FIFO inventory batch
+                    $itemData['product']->createInventoryBatch(
+                        $itemData['quantity'],
+                        $itemData['cost_price'],
+                        $validated['purchase_date'] ?? now()->toDateString(),
+                        $purchaseItem->id,
+                        'Purchase #' . $purchase->reference_number
+                    );
                 }
             }
 
@@ -301,6 +311,15 @@ class PurchaseController extends Controller
             foreach ($purchase->items as $item) {
                 $item->product->increment('quantity', $item->quantity);
                 $item->product->update(['cost_price' => $item->cost_price]);
+                
+                // Create FIFO inventory batch
+                $item->product->createInventoryBatch(
+                    $item->quantity,
+                    $item->cost_price,
+                    $purchase->purchase_date,
+                    $item->id,
+                    'Purchase #' . $purchase->reference_number . ' (Received)'
+                );
             }
 
             $updateData = ['status' => 'received', 'paid_amount' => $newPaid];

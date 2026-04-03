@@ -45,6 +45,11 @@ class Product extends Model
         return $this->hasMany(SaleItem::class);
     }
 
+    public function inventoryBatches()
+    {
+        return $this->hasMany(InventoryBatch::class);
+    }
+
     public function isLowStock(): bool
     {
         return $this->quantity <= $this->alert_quantity;
@@ -74,5 +79,121 @@ class Product extends Model
             return asset($this->image);
         }
         return asset('storage/' . $this->image);
+    }
+
+    /**
+     * Get FIFO cost price for this product
+     */
+    public function getFifoCostPrice(): float
+    {
+        return InventoryBatch::getAverageCostPrice($this->id);
+    }
+
+    /**
+     * Get available quantity from FIFO batches
+     */
+    public function getFifoQuantity(): int
+    {
+        return InventoryBatch::getTotalAvailableQuantity($this->id);
+    }
+
+    /**
+     * Get FIFO batches for this product
+     */
+    public function getFifoBatches()
+    {
+        return InventoryBatch::getFifoBatches($this->id);
+    }
+
+    /**
+     * Create inventory batch from purchase
+     */
+    public function createInventoryBatch($quantity, $costPrice, $batchDate = null, $purchaseItemId = null, $notes = null)
+    {
+        return InventoryBatch::create([
+            'product_id' => $this->id,
+            'purchase_item_id' => $purchaseItemId,
+            'cost_price' => $costPrice,
+            'selling_price' => $this->selling_price, // Store current selling price
+            'quantity_initial' => $quantity,
+            'quantity_remaining' => $quantity,
+            'batch_date' => $batchDate ?? now()->toDateString(),
+            'notes' => $notes,
+        ]);
+    }
+
+    /**
+     * Reduce stock using FIFO method
+     */
+    public function reduceFifoStock($quantity): array
+    {
+        $batches = $this->getFifoBatches();
+        $usedBatches = [];
+        $remainingQuantity = $quantity;
+
+        foreach ($batches as $batch) {
+            if ($remainingQuantity <= 0) {
+                break;
+            }
+
+            $availableQuantity = $batch->quantity_remaining;
+            $useQuantity = min($remainingQuantity, $availableQuantity);
+
+            if ($useQuantity > 0) {
+                $batch->reduceStock($useQuantity);
+                $usedBatches[] = [
+                    'batch_id' => $batch->id,
+                    'quantity' => $useQuantity,
+                    'cost_price' => $batch->cost_price,
+                ];
+                $remainingQuantity -= $useQuantity;
+            }
+        }
+
+        if ($remainingQuantity > 0) {
+            throw new \Exception("Insufficient stock. Required: {$quantity}, Available: " . ($quantity - $remainingQuantity));
+        }
+
+        // Update product quantity
+        $this->decrement('quantity', $quantity);
+
+        return $usedBatches;
+    }
+
+    /**
+     * Add stock back to FIFO batches (for returns/voids)
+     */
+    public function addFifoStock($quantity, $batchIds = []): bool
+    {
+        if (empty($batchIds)) {
+            // If no specific batches provided, add to the oldest batches
+            $batches = $this->getFifoBatches();
+            $remainingQuantity = $quantity;
+
+            foreach ($batches as $batch) {
+                if ($remainingQuantity <= 0) {
+                    break;
+                }
+
+                $addQuantity = min($remainingQuantity, $batch->quantity_initial - $batch->quantity_remaining);
+                if ($addQuantity > 0) {
+                    $batch->addStock($addQuantity);
+                    $remainingQuantity -= $addQuantity;
+                }
+            }
+        } else {
+            // Add to specific batches
+            foreach ($batchIds as $batchId => $batchQuantity) {
+                $batch = InventoryBatch::find($batchId);
+                if ($batch && $batch->product_id === $this->id) {
+                    $batch->addStock($batchQuantity);
+                }
+            }
+        }
+
+        // Update product quantity
+        $this->increment('quantity', $quantity);
+
+        return true;
     }
 }

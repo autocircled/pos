@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ActivityLog;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\InventoryBatch;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
@@ -153,6 +154,7 @@ class ProductController extends Controller
 
     public function destroy(Product $product)
     {
+        // isAdmin() method exists on User model - checks if user role is 'admin'
         if (!auth()->user()->isAdmin()) {
             return back()->with('error', 'You do not have permission to delete products.');
         }
@@ -214,5 +216,22 @@ class ProductController extends Controller
         if (File::exists($fullPath)) {
             File::delete($fullPath);
         }
+    }
+
+    /**
+     * Show FIFO inventory batches for a product
+     */
+    public function fifoBatches(Product $product)
+    {
+        $batches = $product->inventoryBatches()
+            ->with('purchaseItem.purchase')
+            ->orderBy('batch_date', 'asc')
+            ->orderBy('created_at', 'asc')
+            ->paginate(20);
+
+        $totalQuantity = $batches->sum('quantity_remaining');
+        $averageCost = $batches->where('quantity_remaining', '>', 0)->avg('cost_price');
+
+        return view('products.fifo-batches', compact('product', 'batches', 'totalQuantity', 'averageCost'));
     }
 }

@@ -124,6 +124,9 @@
                                     <a href="{{ route('products.duplicate', $product) }}" class="btn btn-outline-secondary" title="Duplicate">
                                         <i class="bi bi-copy"></i>
                                     </a>
+                                    <a href="{{ route('products.fifo-batches', $product) }}" class="btn btn-outline-info" title="FIFO Batches">
+                                        <i class="bi bi-layers"></i>
+                                    </a>
                                     @if(auth()->user()->isAdmin())
                                         <form action="{{ route('products.destroy', $product) }}" method="POST" class="d-inline"
                                               onsubmit="return confirm('Are you sure you want to delete this product?')">

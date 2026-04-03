@@ -32,6 +32,7 @@ Route::middleware('auth')->group(function () {
 
     // Products
     Route::get('/products/{product}/duplicate', [ProductController::class, 'duplicate'])->name('products.duplicate');
+    Route::get('/products/{product}/fifo-batches', [ProductController::class, 'fifoBatches'])->name('products.fifo-batches');
     Route::resource('products', ProductController::class);
     Route::post('/products/{product}/adjust-stock', [ProductController::class, 'adjustStock'])->name('products.adjust-stock');
 

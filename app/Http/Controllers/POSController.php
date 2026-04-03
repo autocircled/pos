@@ -7,10 +7,12 @@ use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\DuePayment;
+use App\Models\InventoryBatch;
 use App\Models\Setting;
-use Illuminate\Support\Carbon;
+use App\Http\Requests\StoreSaleRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
 
 class POSController extends Controller
@@ -92,19 +94,27 @@ class POSController extends Controller
             foreach ($validated['items'] as $item) {
                 $product = Product::findOrFail($item['product_id']);
 
-                if ($product->quantity < $item['quantity']) {
-                    throw new \Exception("Insufficient stock for {$product->name}. Available: {$product->quantity}");
+                // Check FIFO stock availability
+                $fifoQuantity = $product->getFifoQuantity();
+                if ($fifoQuantity < $item['quantity']) {
+                    throw new \Exception("Insufficient stock for {$product->name}. Available: {$fifoQuantity}");
                 }
 
                 $itemDiscount = $item['discount'] ?? 0;
                 $itemTotal = ($product->selling_price * $item['quantity']) - $itemDiscount;
                 $subtotal += $itemTotal;
 
+                // Get FIFO cost for this item
+                $fifoBatches = $product->reduceFifoStock($item['quantity']);
+                $averageCost = array_sum(array_column($fifoBatches, 'cost_price')) / count($fifoBatches);
+
                 $itemsData[] = [
                     'product' => $product,
                     'quantity' => $item['quantity'],
                     'discount' => $itemDiscount,
                     'total' => $itemTotal,
+                    'fifo_batches' => $fifoBatches,
+                    'average_cost' => $averageCost,
                 ];
             }
 
@@ -150,13 +160,13 @@ class POSController extends Controller
                     'product_id' => $itemData['product']->id,
                     'product_name' => $itemData['product']->name,
                     'unit_price' => $itemData['product']->selling_price,
-                    'cost_price' => $itemData['product']->cost_price,
+                    'cost_price' => $itemData['average_cost'], // Use FIFO average cost
                     'quantity' => $itemData['quantity'],
                     'discount' => $itemData['discount'],
                     'total' => $itemData['total'],
                 ]);
 
-                $itemData['product']->decrement('quantity', $itemData['quantity']);
+                // Note: Product quantity already updated by reduceFifoStock()
             }
 
             DB::commit();
@@ -212,7 +222,8 @@ class POSController extends Controller
             foreach ($sale->items as $item) {
                 $product = Product::find($item->product_id);
                 if ($product) {
-                    $product->increment('quantity', $item->quantity);
+                    // Restore stock to FIFO batches (oldest first)
+                    $product->addFifoStock($item->quantity);
                 }
             }
 
