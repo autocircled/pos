@@ -160,6 +160,18 @@
                         </div>
                     </div>
                     
+                    <div class="mb-4">
+                        <div class="form-check form-switch">
+                            <input type="hidden" name="requires_custom_price" value="0">
+                            <input type="checkbox" name="requires_custom_price" class="form-check-input" id="requires_custom_price" 
+                                   value="1" {{ old('requires_custom_price', $product->requires_custom_price) ? 'checked' : '' }}>
+                            <label class="form-check-label" for="requires_custom_price">
+                                <i class="bi bi-price-tag me-1"></i>Requires Custom Price
+                                <small class="text-muted d-block">Will prompt for custom price in POS</small>
+                            </label>
+                        </div>
+                    </div>
+                    
                     <div class="d-flex gap-2">
                         <button type="submit" class="btn btn-primary">
                             <i class="bi bi-check-lg me-2"></i>Update Product

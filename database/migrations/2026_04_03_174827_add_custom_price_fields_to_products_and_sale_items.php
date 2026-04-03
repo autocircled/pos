@@ -1,0 +1,36 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::table('products', function (Blueprint $table) {
+            $table->boolean('requires_custom_price')->default(false)->after('is_active');
+        });
+
+        Schema::table('sale_items', function (Blueprint $table) {
+            $table->decimal('custom_price', 10, 2)->nullable()->after('unit_price');
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::table('products', function (Blueprint $table) {
+            $table->dropColumn('requires_custom_price');
+        });
+
+        Schema::table('sale_items', function (Blueprint $table) {
+            $table->dropColumn('custom_price');
+        });
+    }
+};

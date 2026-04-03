@@ -14,6 +14,7 @@ class SaleItem extends Model
         'product_id',
         'product_name',
         'unit_price',
+        'custom_price',
         'cost_price',
         'quantity',
         'discount',
@@ -22,6 +23,7 @@ class SaleItem extends Model
 
     protected $casts = [
         'unit_price' => 'decimal:2',
+        'custom_price' => 'decimal:2',
         'cost_price' => 'decimal:2',
         'quantity' => 'integer',
         'discount' => 'decimal:2',
@@ -40,6 +42,23 @@ class SaleItem extends Model
 
     public function getProfit(): float
     {
-        return ($this->unit_price - $this->cost_price) * $this->quantity - $this->discount;
+        $sellingPrice = $this->getActualPrice();
+        return ($sellingPrice - $this->cost_price) * $this->quantity - $this->discount;
+    }
+
+    /**
+     * Get the actual selling price (custom price or unit price)
+     */
+    public function getActualPrice(): float
+    {
+        return $this->custom_price ?? $this->unit_price;
+    }
+
+    /**
+     * Check if this item has a custom price
+     */
+    public function hasCustomPrice(): bool
+    {
+        return !is_null($this->custom_price);
     }
 }

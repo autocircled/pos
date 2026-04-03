@@ -102,8 +102,18 @@
         @foreach($sale->items as $item)
             <div class="receipt-item">
                 <div>
-                    <div>{{ $item->product_name }}</div>
-                    <div class="qty">{{ $item->quantity }} × {{ $currency }}{{ number_format($item->unit_price, 2) }}</div>
+                    <div>
+                        {{ $item->product_name }}
+                        @if($item->hasCustomPrice())
+                            <span class="badge bg-info text-white ms-1" style="font-size: 0.7em;">Custom</span>
+                        @endif
+                    </div>
+                    <div class="qty">
+                        {{ $item->quantity }} × {{ $currency }}{{ number_format($item->getActualPrice(), 2) }}
+                        @if($item->hasCustomPrice())
+                            <small class="text-muted d-block">(Original: {{ $currency }}{{ number_format($item->unit_price, 2) }})</small>
+                        @endif
+                    </div>
                 </div>
                 <div class="fw-semibold">{{ $currency }}{{ number_format($item->total, 2) }}</div>
             </div>

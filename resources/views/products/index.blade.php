@@ -83,7 +83,14 @@
                                         </div>
                                     @endif
                                     <div>
-                                        <div class="fw-semibold">{{ $product->name }}</div>
+                                        <div class="fw-semibold d-flex align-items-center gap-2">
+                                            {{ $product->name }}
+                                            @if($product->requires_custom_price)
+                                                <span class="badge bg-info text-white" title="Requires Custom Price">
+                                                    <i class="bi bi-price-tag"></i> Custom
+                                                </span>
+                                            @endif
+                                        </div>
                                         @if($product->company)
                                             <small class="text-muted d-block">{{ $product->company }}</small>
                                         @endif

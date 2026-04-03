@@ -198,7 +198,14 @@
                                 <i class="bi bi-box text-muted"></i>
                             </div>
                         @endif
-                        <div class="name" title="{{ $product->name }}">{{ $product->name }}</div>
+                        <div class="name" title="{{ $product->name }}">
+                            {{ $product->name }}
+                            @if($product->requires_custom_price)
+                                <span class="badge bg-info text-white ms-1" style="font-size: 0.6em;" title="Requires Custom Price">
+                                    <i class="bi bi-price-tag"></i>
+                                </span>
+                            @endif
+                        </div>
                         @if($product->company)
                             <div class="text-muted" style="font-size: 0.75rem;">{{ $product->company }}</div>
                         @endif
@@ -345,6 +352,40 @@
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                 <button type="button" class="btn btn-primary" id="completeSale">
                     <i class="bi bi-check-lg me-2"></i>Complete Sale
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Custom Price Modal -->
+<div class="modal fade" id="customPriceModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-price-tag me-2"></i>Set Custom Price</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Product</label>
+                    <input type="text" id="customPriceProductName" class="form-control" readonly>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Custom Price <span class="text-danger">*</span></label>
+                    <div class="input-group">
+                        <span class="input-group-text">{{ $currency }}</span>
+                        <input type="number" id="customPriceInput" class="form-control" step="0.01" min="0" 
+                               placeholder="0.00" required autofocus>
+                    </div>
+                    <small class="text-muted">Enter the custom price for this service/product</small>
+                </div>
+                <div id="customPriceError" class="alert alert-danger d-none"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirmCustomPrice">
+                    <i class="bi bi-check-lg me-2"></i>Add to Cart
                 </button>
             </div>
         </div>
@@ -602,6 +643,40 @@ document.addEventListener('DOMContentLoaded', function() {
         const val = parseInt(input.value, 10);
         if (!isNaN(val)) setQuantity(index, val);
     });
+    
+    // Custom price modal event listener
+    document.getElementById('confirmCustomPrice').addEventListener('click', function() {
+        const priceInput = document.getElementById('customPriceInput');
+        const price = parseFloat(priceInput.value);
+        const errorDiv = document.getElementById('customPriceError');
+        
+        // Validate price
+        if (!price || price <= 0 || isNaN(price)) {
+            errorDiv.textContent = 'Please enter a valid price greater than 0';
+            errorDiv.classList.remove('d-none');
+            priceInput.focus();
+            return;
+        }
+        
+        // Add product to cart with custom price
+        if (window.pendingCustomPriceProduct) {
+            addProductToCart(window.pendingCustomPriceProduct, price);
+            
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('customPriceModal'));
+            modal.hide();
+            
+            // Clear pending product
+            window.pendingCustomPriceProduct = null;
+        }
+    });
+    
+    // Allow Enter key in custom price input
+    document.getElementById('customPriceInput').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            document.getElementById('confirmCustomPrice').click();
+        }
+    });
 });
 
 function filterProducts() {
@@ -620,12 +695,46 @@ function filterProducts() {
 }
 
 function addToCart(product) {
+    // Check if product requires custom price
+    if (product.requires_custom_price) {
+        showCustomPriceModal(product);
+        return;
+    }
+    
+    addProductToCart(product, parseFloat(product.selling_price));
+}
+
+function showCustomPriceModal(product) {
+    // Set product name in modal
+    document.getElementById('customPriceProductName').value = product.name;
+    document.getElementById('customPriceInput').value = '';
+    document.getElementById('customPriceError').classList.add('d-none');
+    
+    // Store product for later use
+    window.pendingCustomPriceProduct = product;
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('customPriceModal'));
+    modal.show();
+    
+    // Focus on price input
+    setTimeout(() => {
+        document.getElementById('customPriceInput').focus();
+    }, 500);
+}
+
+function addProductToCart(product, price) {
     const currentItems = getCurrentCartItems();
     const existingItem = currentItems.find(item => item.product_id === product.id);
     
     if (existingItem) {
         if (existingItem.quantity < product.quantity) {
             existingItem.quantity++;
+            // Update price if it's a custom price item
+            if (existingItem.custom_price) {
+                existingItem.price = price;
+                existingItem.custom_price = price;
+            }
         } else {
             alert('Not enough stock available');
             return;
@@ -634,7 +743,8 @@ function addToCart(product) {
         currentItems.push({
             product_id: product.id,
             name: product.name,
-            price: parseFloat(product.selling_price),
+            price: price,
+            custom_price: product.requires_custom_price ? price : null,
             quantity: 1,
             max_qty: product.quantity,
             discount: 0
@@ -671,8 +781,14 @@ function renderCart() {
     container.innerHTML = currentItems.map((item, index) => `
         <div class="cart-item" data-cart-item="${index}">
             <div class="info">
-                <div class="name"><a href="/products/${item.product_id}" target="_blank">${escapeHtml(item.name)}</a></div>
-                <div class="price cart-item-total">${cs}${item.price.toFixed(2)} × ${item.quantity} = ${cs}${(item.price * item.quantity).toFixed(2)}</div>
+                <div class="name">
+                    <a href="/products/${item.product_id}" target="_blank">${escapeHtml(item.name)}</a>
+                    ${item.custom_price ? '<span class="badge bg-info text-white ms-2" title="Custom Price"><i class="bi bi-price-tag"></i> Custom</span>' : ''}
+                </div>
+                <div class="price cart-item-total ${item.custom_price ? 'text-info' : ''}">
+                    ${cs}${item.price.toFixed(2)} × ${item.quantity} = ${cs}${(item.price * item.quantity).toFixed(2)}
+                    ${item.custom_price ? '<small class="d-block text-muted">Custom Price</small>' : ''}
+                </div>
             </div>
             <div class="qty-control">
                 <button type="button" class="qty-btn" data-cart-index="${index}" data-cart-action="decrease">−</button>
@@ -793,7 +909,8 @@ function completeSale() {
         items: currentItems.map(item => ({
             product_id: item.product_id,
             quantity: item.quantity,
-            discount: item.discount
+            discount: item.discount,
+            custom_price: item.custom_price || null
         })),
         sale_date: (function () {
             const el = document.getElementById('saleDate');

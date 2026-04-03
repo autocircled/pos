@@ -24,7 +24,12 @@ class POSController extends Controller
             ->where('quantity', '>', 0)
             ->with('category')
             ->orderBy('name')
-            ->get();
+            ->get()
+            ->map(function ($product) {
+                // Ensure requires_custom_price is properly cast and included
+                $product->requires_custom_price = (bool) $product->requires_custom_price;
+                return $product;
+            });
         $paymentMethods = Setting::getPaymentMethods();
 
         return view('pos.index', compact('categories', 'products', 'paymentMethods'));
@@ -71,6 +76,7 @@ class POSController extends Controller
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.quantity' => 'required|integer|min:1',
             'items.*.discount' => 'nullable|numeric|min:0',
+            'items.*.custom_price' => 'nullable|numeric|min:0',
             'sale_date' => 'nullable|date|before_or_equal:today',
             'customer_name' => 'nullable|string|max:255',
             'customer_phone' => 'nullable|string|max:20',
@@ -101,7 +107,10 @@ class POSController extends Controller
                 }
 
                 $itemDiscount = $item['discount'] ?? 0;
-                $itemTotal = ($product->selling_price * $item['quantity']) - $itemDiscount;
+                
+                // Use custom price if provided, otherwise use selling price
+                $sellingPrice = $item['custom_price'] ?? $product->selling_price;
+                $itemTotal = ($sellingPrice * $item['quantity']) - $itemDiscount;
                 $subtotal += $itemTotal;
 
                 // Get FIFO cost for this item
@@ -113,6 +122,8 @@ class POSController extends Controller
                     'quantity' => $item['quantity'],
                     'discount' => $itemDiscount,
                     'total' => $itemTotal,
+                    'selling_price' => $sellingPrice,
+                    'custom_price' => $item['custom_price'] ?? null,
                     'fifo_batches' => $fifoBatches,
                     'average_cost' => $averageCost,
                 ];
@@ -160,6 +171,7 @@ class POSController extends Controller
                     'product_id' => $itemData['product']->id,
                     'product_name' => $itemData['product']->name,
                     'unit_price' => $itemData['product']->selling_price,
+                    'custom_price' => $itemData['custom_price'],
                     'cost_price' => $itemData['average_cost'], // Use FIFO average cost
                     'quantity' => $itemData['quantity'],
                     'discount' => $itemData['discount'],

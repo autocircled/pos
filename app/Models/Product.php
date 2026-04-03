@@ -23,6 +23,7 @@ class Product extends Model
         'unit',
         'image',
         'is_active',
+        'requires_custom_price',
     ];
 
     protected $casts = [
@@ -31,6 +32,7 @@ class Product extends Model
         'quantity' => 'integer',
         'alert_quantity' => 'integer',
         'is_active' => 'boolean',
+        'requires_custom_price' => 'boolean',
     ];
 
     protected $appends = ['image_url'];

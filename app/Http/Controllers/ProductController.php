@@ -88,9 +88,11 @@ class ProductController extends Controller
             'alert_quantity' => 'required|integer|min:0',
             'unit' => 'required|string|max:50',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'requires_custom_price' => 'boolean',
         ]);
 
         $validated['is_active'] = $request->has('is_active');
+        // Remove the manual setting since the hidden input ensures the field is always present
 
         if ($request->hasFile('image')) {
             $validated['image'] = $this->storeProductImage($request->file('image'));
@@ -131,9 +133,11 @@ class ProductController extends Controller
             'alert_quantity' => 'required|integer|min:0',
             'unit' => 'required|string|max:50',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'requires_custom_price' => 'boolean',
         ]);
 
         $validated['is_active'] = $request->has('is_active');
+        // Remove the manual setting since the hidden input ensures the field is always present
 
         if ($request->hasFile('image')) {
             if ($product->image) {
