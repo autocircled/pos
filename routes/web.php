@@ -88,5 +88,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/backups/{file}/download', [BackupController::class, 'download'])->name('backups.download');
         Route::post('/backups/{file}/restore', [BackupController::class, 'restore'])->name('backups.restore');
         Route::delete('/backups/{file}', [BackupController::class, 'destroy'])->name('backups.destroy');
+
+        // Database migrations
+        Route::get('/migrations', [BackupController::class, 'migrations'])->name('migrations.index');
+        Route::post('/migrations/run', [BackupController::class, 'runMigration'])->name('migrations.run');
     });
 });

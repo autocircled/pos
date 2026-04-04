@@ -139,6 +139,63 @@ class BackupController extends Controller
             ->with('success', "Backup {$filename} deleted.");
     }
 
+    public function migrations(): View
+    {
+        // Get list of pending migrations
+        $pendingMigrations = $this->getPendingMigrations();
+        $ranMigrations = $this->getRanMigrations();
+        
+        return view('backups.migrations', compact('pendingMigrations', 'ranMigrations'));
+    }
+
+    public function runMigration(): RedirectResponse
+    {
+        try {
+            Artisan::call('migrate', ['--force' => true]);
+            $output = Artisan::output();
+            
+            return redirect()->route('migrations.index')
+                ->with('success', 'Migration completed successfully!');
+        } catch (\Exception $e) {
+            return redirect()->route('migrations.index')
+                ->with('error', 'Migration failed: ' . $e->getMessage());
+        }
+    }
+
+    private function getPendingMigrations(): array
+    {
+        $output = Artisan::call('migrate:status');
+        $output = Artisan::output();
+        
+        $pending = [];
+        $lines = explode("\n", $output);
+        
+        foreach ($lines as $line) {
+            if (strpos($line, '[ ]') !== false) {
+                $pending[] = trim(str_replace('[ ]', '', $line));
+            }
+        }
+        
+        return $pending;
+    }
+
+    private function getRanMigrations(): array
+    {
+        $output = Artisan::call('migrate:status');
+        $output = Artisan::output();
+        
+        $ran = [];
+        $lines = explode("\n", $output);
+        
+        foreach ($lines as $line) {
+            if (strpos($line, '[✓]') !== false || strpos($line, '[X]') !== false) {
+                $ran[] = trim(str_replace(['[✓]', '[X]'], '', $line));
+            }
+        }
+        
+        return $ran;
+    }
+
     private function humanFilesize(int $bytes): string
     {
         $units = ['B', 'KB', 'MB', 'GB'];

@@ -9,13 +9,18 @@
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <span><i class="bi bi-database me-2"></i>Backup Files</span>
-                <form action="{{ route('backups.run') }}" method="POST">
-                    @csrf
-                    <button type="submit" class="btn btn-primary btn-sm"
-                            onclick="return confirm('Create a new database backup now?')">
-                        <i class="bi bi-plus-circle me-1"></i> Run Backup Now
-                    </button>
-                </form>
+                <div class="d-flex gap-2">
+                    <a href="{{ route('migrations.index') }}" class="btn btn-outline-info btn-sm">
+                        <i class="bi bi-arrow-up-down me-1"></i> Migrations
+                    </a>
+                    <form action="{{ route('backups.run') }}" method="POST" class="d-inline">
+                        @csrf
+                        <button type="submit" class="btn btn-primary btn-sm"
+                                onclick="return confirm('Create a new database backup now?')">
+                            <i class="bi bi-plus-circle me-1"></i> Run Backup Now
+                        </button>
+                    </form>
+                </div>
             </div>
 
             <div class="card-body p-0">
