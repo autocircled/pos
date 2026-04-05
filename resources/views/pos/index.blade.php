@@ -14,17 +14,18 @@
         flex: 1;
         display: flex;
         flex-direction: column;
+        overflow-y: auto;
     }
     .cart-section {
         width: 400px;
         display: flex;
         flex-direction: column;
+        overflow-y: auto;
     }
     .products-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
         gap: 0.75rem;
-        overflow-y: auto;
         padding: 0.5rem;
     }
     .product-card {
@@ -209,7 +210,7 @@
                         @if($product->company)
                             <div class="text-muted" style="font-size: 0.75rem;">{{ $product->company }}</div>
                         @endif
-                        <div class="price">{{ $currency }}{{ number_format($product->selling_price, 2) }}</div>
+                        <div class="price" title="{{ $currency }}{{ number_format($product->cost_price, 2) }}">{{ $currency }}{{ number_format($product->selling_price, 2) }}</div>
                         <div class="stock">{{ $product->quantity }} in stock</div>
                     </div>
                 @endforeach
@@ -242,7 +243,7 @@
             </div>
             
             <div class="cart-items" id="cartItems">
-                <div class="text-center text-muted py-5" id="emptyCart">
+                <div class="text-center text-muted" id="emptyCart">
                     <i class="bi bi-cart-x fs-1 d-block mb-2"></i>
                     <p>Cart is empty</p>
                     <small>Click on products to add them</small>
@@ -707,7 +708,7 @@ function addToCart(product) {
 function showCustomPriceModal(product) {
     // Set product name in modal
     document.getElementById('customPriceProductName').value = product.name;
-    document.getElementById('customPriceInput').value = '';
+    document.getElementById('customPriceInput').value = product.selling_price;
     document.getElementById('customPriceError').classList.add('d-none');
     
     // Store product for later use

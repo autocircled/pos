@@ -211,7 +211,21 @@
             font-weight: 600;
         }
         
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            display: none;
+        }
+        
         @media (max-width: 991px) {
+            .sidebar-overlay.show {
+                display: block;
+            }
             .sidebar {
                 transform: translateX(-100%);
             }
@@ -222,10 +236,20 @@
                 margin-left: 0;
             }
         }
+        
+        @media (min-width: 992px) {
+            .sidebar.hidden {
+                transform: translateX(-100%);
+            }
+            .main-content.sidebar-hidden {
+                margin-left: 0;
+            }
+        }
     </style>
     @stack('styles')
 </head>
 <body>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
     <aside class="sidebar">
         <div class="sidebar-brand">
             <h4><i class="bi bi-pencil-square"></i> Stationery POS</h4>
@@ -312,7 +336,7 @@
     <main class="main-content">
         <header class="top-header">
             <div class="d-flex align-items-center gap-3">
-                <button class="btn btn-link d-lg-none text-dark" id="sidebarToggle">
+                <button class="btn btn-link text-dark" id="sidebarToggle" title="Toggle Sidebar">
                     <i class="bi bi-list fs-4"></i>
                 </button>
                 <h5 class="mb-0">@yield('page-title', 'Dashboard')</h5>
@@ -385,7 +409,26 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         document.getElementById('sidebarToggle')?.addEventListener('click', function() {
-            document.querySelector('.sidebar').classList.toggle('show');
+            const sidebar = document.querySelector('.sidebar');
+            const mainContent = document.querySelector('.main-content');
+            const overlay = document.getElementById('sidebarOverlay');
+            
+            if (window.innerWidth >= 992) {
+                // Desktop: toggle hidden class
+                sidebar.classList.toggle('hidden');
+                mainContent.classList.toggle('sidebar-hidden');
+            } else {
+                // Mobile: toggle show class and overlay
+                sidebar.classList.toggle('show');
+                overlay.classList.toggle('show');
+            }
+        });
+        
+        // Close sidebar when clicking on overlay (mobile only)
+        document.getElementById('sidebarOverlay')?.addEventListener('click', function() {
+            const sidebar = document.querySelector('.sidebar');
+            sidebar.classList.remove('show');
+            this.classList.remove('show');
         });
         
         // Global currency symbol for JavaScript
