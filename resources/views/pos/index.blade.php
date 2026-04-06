@@ -160,6 +160,92 @@
         background: #4f46e5;
         color: #fff;
     }
+    
+    /* Mobile Cart Styles */
+    @media (max-width: 767px) {
+        .pos-container {
+            flex-direction: column;
+        }
+        
+        .cart-section {
+            display: none;
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1050;
+            background: #fff;
+        }
+        
+        .cart-section.show {
+            display: flex;
+        }
+        
+        .cart-container {
+            width: 100%;
+            height: 100%;
+            overflow-y: auto;
+        }
+        
+        .mobile-cart-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem;
+            border-bottom: 1px solid #e2e8f0;
+            background: #f8fafc;
+        }
+        
+        .floating-cart-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #4f46e5;
+            color: #fff;
+            border: none;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            z-index: 1040;
+            transition: all 0.3s ease;
+        }
+        
+        .floating-cart-btn:hover {
+            background: #4338ca;
+            transform: scale(1.1);
+        }
+        
+        .cart-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #dc2626;
+            color: #fff;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+    }
+    
+    @media (min-width: 768px) {
+        .floating-cart-btn {
+            display: none;
+        }
+        .mobile-cart-header {
+            display: none;
+        }
+    }
 </style>
 @endpush
 
@@ -218,29 +304,49 @@
         </div>
     </div>
     
+    <!-- Floating Cart Button for Mobile -->
+    <button class="floating-cart-btn" id="floatingCartBtn">
+        <i class="bi bi-cart3"></i>
+        <span class="cart-badge" id="cartBadge" style="display: none;">0</span>
+    </button>
+    
     <div class="cart-section">
-        <div class="card flex-grow-1 d-flex flex-column">
-            <div class="card-header">
-                <div class="d-flex align-items-center justify-content-between">
-                    <div class="d-flex align-items-center">
-                        <i class="bi bi-cart3 me-2"></i>
-                        <select id="cartSelector" class="form-select form-select-sm me-2" style="width: auto;">
-                            <!-- Cart options will be populated by JavaScript -->
-                        </select>
-                    </div>
-                    <div class="btn-group btn-group-sm">
-                        <button class="btn btn-outline-success" id="newCartBtn" title="New Cart">
-                            <i class="bi bi-plus-lg"></i>
-                        </button>
-                        <button class="btn btn-outline-danger" id="deleteCartBtn" title="Delete Cart">
-                            <i class="bi bi-trash"></i>
-                        </button>
-                        <button class="btn btn-outline-warning" id="clearCart" title="Clear Current Cart">
-                            <i class="bi bi-arrow-clockwise"></i>
-                        </button>
+        <!-- Mobile Cart Header -->
+        <div class="mobile-cart-header">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-cart3 me-2"></i>
+                <select id="cartSelector" class="form-select form-select-sm me-2" style="width: auto;">
+                    <!-- Cart options will be populated by JavaScript -->
+                </select>
+            </div>
+            <button class="btn btn-outline-secondary btn-sm" id="closeMobileCart">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+        
+        <div class="cart-container">
+            <div class="card flex-grow-1 d-flex flex-column">
+                <div class="card-header d-none d-md-block">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-cart3 me-2"></i>
+                            <select id="cartSelectorDesktop" class="form-select form-select-sm me-2" style="width: auto;">
+                                <!-- Cart options will be populated by JavaScript -->
+                            </select>
+                        </div>
+                        <div class="btn-group btn-group-sm">
+                            <button class="btn btn-outline-success" id="newCartBtn" title="New Cart">
+                                <i class="bi bi-plus-lg"></i>
+                            </button>
+                            <button class="btn btn-outline-danger" id="deleteCartBtn" title="Delete Cart">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                            <button class="btn btn-outline-warning" id="clearCart" title="Clear Current Cart">
+                                <i class="bi bi-arrow-clockwise"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
-            </div>
             
             <div class="cart-items" id="cartItems">
                 <div class="text-center text-muted" id="emptyCart">
@@ -280,6 +386,7 @@
                     <i class="bi bi-credit-card me-2"></i>Checkout
                 </button>
             </div>
+        </div>
         </div>
     </div>
 </div>
@@ -498,19 +605,43 @@ function deleteCart(cartId) {
 }
 
 function updateCartSelector() {
-    const selector = document.getElementById('cartSelector');
-    if (!selector) return;
+    const selectors = [
+        document.getElementById('cartSelector'),
+        document.getElementById('cartSelectorDesktop')
+    ];
     
-    selector.innerHTML = '';
-    
-    Object.keys(carts).forEach(cartId => {
-        const cart = carts[cartId];
-        const option = document.createElement('option');
-        option.value = cartId;
-        option.textContent = cart.name + (cart.items.length > 0 ? ' (' + cart.items.length + ')' : '');
-        option.selected = cartId === currentCartId;
-        selector.appendChild(option);
+    selectors.forEach(selector => {
+        if (!selector) return;
+        
+        selector.innerHTML = '';
+        
+        Object.keys(carts).forEach(cartId => {
+            const cart = carts[cartId];
+            const option = document.createElement('option');
+            option.value = cartId;
+            option.textContent = cart.name + (cart.items.length > 0 ? ' (' + cart.items.length + ')' : '');
+            option.selected = cartId === currentCartId;
+            selector.appendChild(option);
+        });
     });
+    
+    // Update cart badge
+    updateCartBadge();
+}
+
+function updateCartBadge() {
+    const cartBadge = document.getElementById('cartBadge');
+    if (!cartBadge) return;
+    
+    const currentItems = getCurrentCartItems();
+    const itemCount = currentItems.reduce((sum, item) => sum + item.quantity, 0);
+    
+    if (itemCount > 0) {
+        cartBadge.textContent = itemCount;
+        cartBadge.style.display = 'flex';
+    } else {
+        cartBadge.style.display = 'none';
+    }
 }
 
 function updateCurrentCartName(customerName) {
@@ -536,13 +667,38 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize cart selector
     updateCartSelector();
     
-    // Cart selector change event
-    const cartSelector = document.getElementById('cartSelector');
-    if (cartSelector) {
-        cartSelector.addEventListener('change', function() {
-            switchCart(this.value);
+    // Mobile cart functionality
+    const floatingCartBtn = document.getElementById('floatingCartBtn');
+    const cartSection = document.querySelector('.cart-section');
+    const closeMobileCart = document.getElementById('closeMobileCart');
+    
+    if (floatingCartBtn) {
+        floatingCartBtn.addEventListener('click', function() {
+            cartSection.classList.add('show');
         });
     }
+    
+    if (closeMobileCart) {
+        closeMobileCart.addEventListener('click', function() {
+            cartSection.classList.remove('show');
+        });
+    }
+    
+    // Update cart badge
+    updateCartBadge();
+    
+    // Cart selector change event
+    const cartSelector = document.getElementById('cartSelector');
+    const cartSelectorDesktop = document.getElementById('cartSelectorDesktop');
+    
+    // Handle both mobile and desktop cart selectors
+    [cartSelector, cartSelectorDesktop].forEach(selector => {
+        if (selector) {
+            selector.addEventListener('change', function() {
+                switchCart(this.value);
+            });
+        }
+    });
     
     // New cart button
     const newCartBtn = document.getElementById('newCartBtn');
@@ -803,6 +959,7 @@ function renderCart() {
     `).join('');
     
     updateTotals();
+    updateCartBadge();
 }
 
 function escapeHtml(text) {
