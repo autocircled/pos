@@ -37,6 +37,7 @@
                         <th>Customer</th>
                         <th>Items</th>
                         <th>Total</th>
+                        <th>Profit</th>
                         <th>Payment Status</th>
                         <th>Payment</th>
                         <th>Status</th>
@@ -55,6 +56,7 @@
                             <td>{{ $sale->customer_name ?: 'Walk-in' }}</td>
                             <td>{{ $sale->items->count() }} items</td>
                             <td class="fw-semibold">{{ $currency }}{{ number_format($sale->total, 2) }}</td>
+                            <td class="fw-semibold">{{ $currency }}{{ number_format($sale->getProfit(), 2) }}</td>
                             <td>
                                 {!! $sale->payment_status_badge !!}
                                 @if($sale->getRemainingDue())

@@ -99,32 +99,53 @@
     @endif
     
     <div class="receipt-items">
-        @foreach($sale->items as $item)
-            <div class="receipt-item">
-                <div>
-                    <div>
-                        {{ $item->product_name }}
-                        @if($item->hasCustomPrice())
-                            <span class="badge bg-info text-white ms-1" style="font-size: 0.7em;">Custom</span>
-                        @endif
-                    </div>
-                    <div class="qty">
-                        {{ $item->quantity }} × {{ $currency }}{{ number_format($item->getActualPrice(), 2) }}
-                        @if($item->hasCustomPrice())
-                            <small class="text-muted d-block">(Original: {{ $currency }}{{ number_format($item->unit_price, 2) }})</small>
-                        @endif
-                    </div>
-                </div>
-                <div class="fw-semibold">{{ $currency }}{{ number_format($item->total, 2) }}</div>
-            </div>
-        @endforeach
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Price</th>
+                    <th>Profit</th>
+                </tr>
+            </thead>
+            <tbody>
+                @php
+                    $totalProfit = 0;
+                @endphp
+            @foreach($sale->items as $item)
+                @php
+                    $totalProfit += $item->getProfit();
+                @endphp
+                <tr>
+                    <td>
+                        <div>
+                            {{ $item->product_name }}
+                            @if($item->hasCustomPrice())
+                                <span class="badge bg-info text-white ms-1" style="font-size: 0.7em;">Custom</span>
+                            @endif
+                        </div>
+                        <div class="qty">
+                            {{ $item->quantity }} × {{ $currency }}{{ number_format($item->getActualPrice(), 2) }}
+                            @if($item->hasCustomPrice())
+                                <small class="text-muted d-block">(Original: {{ $currency }}{{ number_format($item->unit_price, 2) }})</small>
+                            @endif
+                        </div>
+                    </td>
+                    <td class="fw-semibold">{{ $currency }}{{ number_format($item->total, 2) }}</td>
+                    <td class="fw-semibold">{{ $currency }}{{ number_format($item->getProfit(), 2) }}</td>
+                </tr>
+            @endforeach
+            </tbody>
+            <tfoot>
+                <tr>
+                    <th>Subtotal</th>
+                    <th>{{ $currency }}{{ number_format($sale->subtotal, 2) }}</th>
+                    <th>{{ $currency }}{{ number_format($totalProfit, 2) }}</th>
+                </tr>
+            </tfoot>
+        </table>
     </div>
     
     <div class="receipt-totals">
-        <div class="row">
-            <span>Subtotal</span>
-            <span>{{ $currency }}{{ number_format($sale->subtotal, 2) }}</span>
-        </div>
         @if($sale->discount > 0)
             <div class="row text-danger">
                 <span>Discount</span>

@@ -60,7 +60,7 @@ class Sale extends Model
     public function getProfit(): float
     {
         return $this->items->sum(function ($item) {
-            return ($item->unit_price - $item->cost_price) * $item->quantity - $item->discount;
+            return ($item->getActualPrice() - $item->cost_price) * $item->quantity - $item->discount;
         });
     }
 

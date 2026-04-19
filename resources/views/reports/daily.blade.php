@@ -197,6 +197,7 @@
                                 <th>Time</th>
                                 <th>Payment</th>
                                 <th class="text-end">Total</th>
+                                <th class="text-end">Profit</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -212,10 +213,11 @@
                                         </span>
                                     </td>
                                     <td class="text-end fw-semibold">{{ $currency }}{{ number_format($sale->total, 2) }}</td>
+                                    <td class="text-end fw-semibold">{{ $currency }}{{ number_format($sale->getProfit(), 2) }}</td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="4" class="text-center text-muted py-3">No transactions</td>
+                                    <td colspan="5" class="text-center text-muted py-3">No transactions</td>
                                 </tr>
                             @endforelse
                         </tbody>
