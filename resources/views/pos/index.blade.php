@@ -56,9 +56,9 @@
         font-size: 0.85rem;
         font-weight: 500;
         margin-bottom: 0.25rem;
-        overflow: hidden;
+        /* overflow: hidden;
         text-overflow: ellipsis;
-        white-space: nowrap;
+        white-space: nowrap; */
     }
     .product-card .price {
         color: #4f46e5;
