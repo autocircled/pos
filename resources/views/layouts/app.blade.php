@@ -301,6 +301,11 @@
                 <i class="bi bi-cash-stack"></i> Expenses
             </a>
 
+            <div class="nav-section">MFS Banking</div>
+            <a class="nav-link {{ request()->routeIs('mfs.*') ? 'active' : '' }}" href="{{ route('mfs.index') }}">
+                <i class="bi bi-phone"></i> MFS Dashboard
+            </a>
+
             <div class="nav-section">Reports</div>
             <a class="nav-link {{ request()->routeIs('reports.daily') ? 'active' : '' }}" href="{{ route('reports.daily') }}">
                 <i class="bi bi-calendar-day"></i> Daily Report

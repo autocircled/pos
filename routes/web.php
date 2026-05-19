@@ -6,6 +6,7 @@ use App\Http\Controllers\BackupController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\MfsController;
 use App\Http\Controllers\POSController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
@@ -74,6 +75,16 @@ Route::middleware('auth')->group(function () {
 
     // Expenses
     Route::resource('expenses', ExpenseController::class)->except(['show']);
+
+    // MFS (Mobile Financial Service)
+    Route::get('/mfs', [MfsController::class, 'index'])->name('mfs.index');
+    Route::post('/mfs/accounts', [MfsController::class, 'storeAccount'])->name('mfs.accounts.store');
+    Route::put('/mfs/accounts/{account}', [MfsController::class, 'updateAccount'])->name('mfs.accounts.update');
+    Route::delete('/mfs/accounts/{account}', [MfsController::class, 'destroyAccount'])->name('mfs.accounts.destroy');
+    Route::get('/mfs/transactions', [MfsController::class, 'transactions'])->name('mfs.transactions');
+    Route::post('/mfs/transactions', [MfsController::class, 'storeTransaction'])->name('mfs.transactions.store');
+    Route::delete('/mfs/transactions/{transaction}', [MfsController::class, 'destroyTransaction'])->name('mfs.transactions.destroy');
+    Route::get('/mfs/report', [MfsController::class, 'report'])->name('mfs.report');
 
     // User management, Activity log & Backups (admin only)
     Route::middleware('admin')->group(function () {
